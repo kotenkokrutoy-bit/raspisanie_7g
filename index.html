@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Расписание 7г класса • Чат и Тетрис</title>
+    <title>Расписание 7г класса • Квен ИИ и Тетрис</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -12,70 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fira+Code:wght@500;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&family=Montserrat:wght@500;700;900&family=Pacifico&family=Poppins:wght@500;700;900&family=Rubik:wght@500;700;900&display=swap" rel="stylesheet">
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-    <!-- FIREBASE SDK И ИНТЕГРАЦИЯ -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // Конфигурация вашего Firebase проекта (взята из консоли Firebase)
-        const firebaseConfig = {
-            apiKey: "AIzaSyAmhfOSWdE1yVouFPykOsriHSZxWiU06Q",
-            authDomain: "chat-19c87.firebaseapp.com",
-            databaseURL: "https://chat-19c87-default-rtdb.firebaseio.com", // Убедитесь, что databaseURL указан правильно
-            projectId: "chat-19c87",
-            storageBucket: "chat-19c87.firebasestorage.app",
-            messagingSenderId: "401730038677",
-            appId: "1:401730038677:web:a02b752377fbf729b9649c",
-            measurementId: "G-70JLBX17WQ"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const messagesRef = ref(db, 'chat_messages_7g');
-
-        // Глобальный массив сообщений
-        window.firebaseMessages = [];
-
-        // Функция отправки сообщения в Firebase
-        window.sendFirebaseMessage = function() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text) return;
-
-            if (typeof containsProfanity === 'function' && containsProfanity(text)) {
-                alert('⚠️ Сообщение заблокировано системой за ненормативную лексику!');
-                return;
-            }
-
-            const msgData = {
-                id: Date.now() + Math.random(),
-                sender: window.currentNickname || 'Ученик 7Г',
-                text: text,
-                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-                timestamp: Date.now()
-            };
-
-            push(messagesRef, msgData);
-            input.value = '';
-        };
-
-        // Слушаем новые сообщения в реальном времени со всех устройств
-        onChildAdded(messagesRef, (snapshot) => {
-            const msg = snapshot.val();
-            // Избегаем дубликатов
-            if (!window.firebaseMessages.some(m => m.id === msg.id)) {
-                window.firebaseMessages.push(msg);
-                if (window.firebaseMessages.length > 100) {
-                    window.firebaseMessages.shift();
-                }
-                if (typeof renderChatMessages === 'function') {
-                    renderChatMessages();
-                }
-            }
-        });
-    </script>
-
     <style>
         :root {
             --accent: #4f46e5;
@@ -334,10 +270,11 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <button onclick="openChatModal()" class="custom-btn inline-flex items-center gap-1 bg-emerald-600/80 hover:bg-emerald-600 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
-                        <i class="ph-fill ph-chat-circle-dots text-sm sm:text-base text-emerald-200"></i>
-                        <span>ЧАТ КЛАССА</span>
-                    </button>
+                    <!-- КНОПКА КВЕН ИИ -->
+                    <a href="https://t.me/botbot228228228_bot" target="_blank" class="custom-btn inline-flex items-center gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
+                        <i class="ph-fill ph-robot text-sm sm:text-base text-cyan-200"></i>
+                        <span>КВЕН ИИ</span>
+                    </a>
                     <button onclick="openGameModal()" class="custom-btn inline-flex items-center gap-1 bg-indigo-600/80 hover:bg-indigo-600 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
                         <i class="ph-fill ph-squares-four text-sm sm:text-base text-cyan-200"></i>
                         <span>ТЕТРИС</span>
@@ -521,62 +458,6 @@
         </div>
 
     </main>
-
-    <!-- МОДАЛЬНОЕ ОКНО ЧАТА КЛАССА -->
-    <div id="chat-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 modal-backdrop transition-opacity">
-        <div class="theme-surface border w-full max-w-lg p-5 sm:p-6 shadow-2xl flex flex-col rounded-3xl animate-[lessonSlideIn_0.25s_ease-out] h-[85vh] sm:h-[80vh]">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-500/20 mb-3 shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 custom-badge bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl">
-                        💬
-                    </div>
-                    <div>
-                        <h3 class="text-base sm:text-lg font-extrabold">ЧАТ 7Г КЛАССА</h3>
-                        <p class="text-xs theme-text-muted">Общайтесь с одноклассниками в реальном времени</p>
-                    </div>
-                </div>
-                <button onclick="closeChatModal()" class="custom-btn theme-surface-alt border w-9 h-9 flex items-center justify-center text-lg">
-                    <i class="ph-bold ph-x"></i>
-                </button>
-            </div>
-
-            <!-- Экран ввода пин-кода -->
-            <div id="chat-auth-view" class="flex-grow flex flex-col items-center justify-center p-4 text-center">
-                <div class="w-16 h-16 custom-box bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-3xl mb-4 shadow-inner">
-                    🔒
-                </div>
-                <h4 class="text-base sm:text-lg font-extrabold mb-1">Введите секретный PIN-код</h4>
-                <p class="text-xs theme-text-muted mb-4">Доступ только для учеников 7г класса (пин: 107)</p>
-                <div class="w-full max-w-xs space-y-3">
-                    <input type="password" id="chat-pin-input" placeholder="PIN-код" class="w-full custom-badge border theme-surface-alt px-4 py-3 text-center text-lg font-mono-num tracking-widest focus:outline-none">
-                    <div id="chat-pin-error" class="hidden text-xs font-bold text-red-400">Неверный PIN-код!</div>
-                    <button onclick="verifyChatPin()" class="w-full custom-btn accent-bg py-3 text-sm font-extrabold shadow-xl">Войти в чат</button>
-                </div>
-            </div>
-
-            <!-- Экран самого чата -->
-            <div id="chat-main-view" class="hidden flex-grow flex flex-col overflow-hidden">
-                <div class="flex items-center justify-between py-2 px-3 theme-surface-alt border custom-badge mb-3 text-xs shrink-0">
-                    <div class="flex items-center gap-2">
-                        <span>Ваш ник:</span>
-                        <input type="text" id="chat-nickname" onchange="updateNickname(this.value)" class="bg-black/30 border border-white/20 rounded px-2 py-1 font-bold text-xs w-32 focus:outline-none" value="Ученик 7Г">
-                    </div>
-                    <span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Онлайн</span>
-                </div>
-
-                <div id="chat-messages-container" class="flex-grow overflow-y-auto space-y-3 p-3 theme-surface-alt border custom-box mb-3">
-                    <!-- Сообщения будут подгружаться сюда -->
-                </div>
-
-                <div class="flex gap-2 shrink-0">
-                    <input type="text" id="chat-input" onkeydown="if(event.key==='Enter') sendChatMessage()" placeholder="Написать сообщение..." class="flex-grow custom-badge border theme-surface-alt px-4 py-3 text-sm focus:outline-none">
-                    <button onclick="sendChatMessage()" class="custom-btn accent-bg px-5 py-3 text-sm font-extrabold shadow-md shrink-0">
-                        <i class="ph-bold ph-paper-plane-tilt text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- МОДАЛЬНОЕ ОКНО ИГРЫ ТЕТРИС -->
     <div id="game-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 modal-backdrop transition-opacity">
@@ -795,9 +676,9 @@
 
     <!-- ПЛАВАЮЩАЯ КНОПКА -->
     <div id="floating-actions" class="fixed bottom-5 right-4 z-40 flex flex-col gap-2.5 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
-        <button onclick="openChatModal()" title="Чат" class="custom-btn bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
-            💬
-        </button>
+        <a href="https://t.me/botbot228228228_bot" target="_blank" title="Квен ИИ" class="custom-btn bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
+            🤖
+        </a>
         <button onclick="openGameModal()" title="Тетрис" class="custom-btn bg-indigo-600 hover:bg-indigo-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
             🎮
         </button>
@@ -809,7 +690,7 @@
     <!-- ПОДВАЛ -->
     <footer class="theme-surface border-t py-5 px-4 text-center text-xs theme-text-muted mt-auto">
         <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-            <p class="font-bold">Расписание 7г класса • Облачный чат и Тетрис ❤️</p>
+            <p class="font-bold">Расписание 7г класса • Квен ИИ и Тетрис ❤️</p>
             <div class="flex items-center gap-3">
                 <span>Столовая: 08:00 – 16:25</span>
             </div>
@@ -817,93 +698,6 @@
     </footer>
 
     <script>
-        /* --- ОБЛАЧНЫЙ ЧАТ FIREBASE --- */
-        const BAD_WORDS = ['сука', 'блять', 'хуй', 'пизда', 'ебать', 'ебал', 'залупа', 'мразь', 'шлюха', 'сучка', 'гандон', 'чмо', 'урод', 'fuck', 'shit', 'bitch', 'cunt', 'whore', 'asshole'];
-        function containsProfanity(text) {
-            const lower = text.toLowerCase();
-            return BAD_WORDS.some(word => lower.includes(word));
-        }
-
-        let isChatAuthenticated = localStorage.getItem('7g_chat_auth_107') === 'true';
-        let currentNickname = localStorage.getItem('7g_nickname_107') || ('Ученик ' + Math.floor(Math.random() * 89 + 10));
-        window.currentNickname = currentNickname;
-
-        function openChatModal() {
-            document.getElementById('chat-modal').classList.remove('hidden');
-            if (isChatAuthenticated) {
-                document.getElementById('chat-auth-view').classList.add('hidden');
-                document.getElementById('chat-main-view').classList.remove('hidden');
-                document.getElementById('chat-nickname').value = currentNickname;
-                renderChatMessages();
-            } else {
-                document.getElementById('chat-auth-view').classList.remove('hidden');
-                document.getElementById('chat-main-view').classList.add('hidden');
-            }
-        }
-
-        function closeChatModal() {
-            document.getElementById('chat-modal').classList.add('hidden');
-        }
-        document.getElementById('chat-modal').addEventListener('click', (e) => { if (e.target.id === 'chat-modal') closeChatModal(); });
-
-        function verifyChatPin() {
-            const pin = document.getElementById('chat-pin-input').value.trim();
-            if (pin === '107') {
-                isChatAuthenticated = true;
-                localStorage.setItem('7g_chat_auth_107', 'true');
-                document.getElementById('chat-pin-error').classList.add('hidden');
-                document.getElementById('chat-auth-view').classList.add('hidden');
-                document.getElementById('chat-main-view').classList.remove('hidden');
-                document.getElementById('chat-nickname').value = currentNickname;
-                renderChatMessages();
-            } else {
-                document.getElementById('chat-pin-error').classList.remove('hidden');
-            }
-        }
-
-        function updateNickname(val) {
-            currentNickname = val.trim() || 'Ученик 7Г';
-            window.currentNickname = currentNickname;
-            localStorage.setItem('7g_nickname_107', currentNickname);
-        }
-
-        // Вызов отправки сообщения в Firebase из модуля
-        function sendChatMessage() {
-            if (window.sendFirebaseMessage) {
-                window.sendFirebaseMessage();
-            }
-        }
-
-        function renderChatMessages() {
-            const container = document.getElementById('chat-messages-container');
-            const msgs = window.firebaseMessages || [];
-            container.innerHTML = '';
-
-            if (msgs.length === 0) {
-                container.innerHTML = `<div class="text-center text-xs theme-text-muted py-6">В чате пока нет сообщений. Напишите первыми! 👋</div>`;
-                return;
-            }
-
-            msgs.forEach(msg => {
-                const isMe = msg.sender === currentNickname;
-                const div = document.createElement('div');
-                div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
-                div.innerHTML = `
-                    <div class="text-[10px] font-bold theme-text-muted mb-0.5 px-1">${escapeHtml(msg.sender)} • ${msg.time}</div>
-                    <div class="max-w-[85%] px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-medium ${isMe ? 'accent-bg shadow-sm' : 'theme-surface border'} break-words">
-                        ${escapeHtml(msg.text)}
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function escapeHtml(text) {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
-
         const ACCENT_PALETTES = {
             indigo:  { accent: '#4f46e5', light: '#6366f1', dark: '#3730a3', soft: 'rgba(79, 70, 229, 0.18)', glow: 'rgba(79, 70, 229, 0.4)', gradFrom: 'rgba(79, 70, 229, 0.85)', gradVia: 'rgba(67, 56, 202, 0.85)', gradTo: 'rgba(109, 40, 217, 0.85)' },
             emerald: { accent: '#059669', light: '#10b981', dark: '#065f46', soft: 'rgba(16, 185, 129, 0.18)', glow: 'rgba(16, 185, 129, 0.4)', gradFrom: 'rgba(5, 150, 105, 0.85)', gradVia: 'rgba(4, 120, 87, 0.85)', gradTo: 'rgba(15, 118, 110, 0.85)' },
