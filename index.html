@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Расписание 7г класса • Чат и Тетрис</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fira+Code:wght@500;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&family=Montserrat:wght@500;700;900&family=Pacifico&family=Poppins:wght@500;700;900&family=Rubik:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- FIREBASE SDK И ИНТЕГРАЦИЯ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Конфигурация вашего Firebase проекта (взята из консоли Firebase)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmhfOSWdE1yVouFPykOsriHSZxWiU06Q",
+            authDomain: "chat-19c87.firebaseapp.com",
+            databaseURL: "https://chat-19c87-default-rtdb.firebaseio.com", // Убедитесь, что databaseURL указан правильно
+            projectId: "chat-19c87",
+            storageBucket: "chat-19c87.firebasestorage.app",
+            messagingSenderId: "401730038677",
+            appId: "1:401730038677:web:a02b752377fbf729b9649c",
+            measurementId: "G-70JLBX17WQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const messagesRef = ref(db, 'chat_messages_7g');
+
+        // Глобальный массив сообщений
+        window.firebaseMessages = [];
+
+        // Функция отправки сообщения в Firebase
+        window.sendFirebaseMessage = function() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (typeof containsProfanity === 'function' && containsProfanity(text)) {
+                alert('⚠️ Сообщение заблокировано системой за ненормативную лексику!');
+                return;
+            }
+
+            const msgData = {
+                id: Date.now() + Math.random(),
+                sender: window.currentNickname || 'Ученик 7Г',
+                text: text,
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                timestamp: Date.now()
+            };
+
+            push(messagesRef, msgData);
+            input.value = '';
+        };
+
+        // Слушаем новые сообщения в реальном времени со всех устройств
+        onChildAdded(messagesRef, (snapshot) => {
+            const msg = snapshot.val();
+            // Избегаем дубликатов
+            if (!window.firebaseMessages.some(m => m.id === msg.id)) {
+                window.firebaseMessages.push(msg);
+                if (window.firebaseMessages.length > 100) {
+                    window.firebaseMessages.shift();
+                }
+                if (typeof renderChatMessages === 'function') {
+                    renderChatMessages();
+                }
+            }
+        });
+    </script>
+
+    <style>
+        :root {
+            --accent: #4f46e5;
+            --accent-light: #6366f1;
+            --accent-dark: #3730a3;
+            --accent-soft: rgba(79, 70, 229, 0.16);
+            --accent-glow: rgba(79, 70, 229, 0.4);
+            --header-grad-from: rgba(79, 70, 229, 0.85);
+            --header-grad-via: rgba(67, 56, 202, 0.85);
+            --header-grad-to: rgba(109, 40, 217, 0.85);
+
+            --bg-body: #0f172a;
+            --bg-surface: rgba(30, 41, 59, 0.65);
+            --bg-surface-alt: rgba(15, 23, 42, 0.55);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-base: rgba(255, 255, 255, 0.14);
+
+            --radius-btn: 14px;
+            --radius-card: 20px;
+            --radius-badge: 12px;
+            --radius-box: 14px;
+            --card-opacity: 0.65;
+            --blur-strength: 20px;
+            --custom-font: 'Inter', sans-serif;
+            --custom-bg-pattern: none;
+            --pattern-size: 24px;
+            --shadow-depth: 0 8px 32px 0 rgba(0, 0, 0, 0.18);
+        }
+
+        body[data-theme="light"] {
+            --bg-body: #f1f5f9;
+            --bg-surface: rgba(255, 255, 255, var(--card-opacity));
+            --bg-surface-alt: rgba(248, 250, 252, calc(var(--card-opacity) * 0.9));
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-base: rgba(226, 232, 240, 0.8);
+        }
+
+        body[data-theme="dark"] {
+            --bg-body: #090d16;
+            --bg-surface: rgba(30, 41, 59, var(--card-opacity));
+            --bg-surface-alt: rgba(15, 23, 42, calc(var(--card-opacity) * 0.85));
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-base: rgba(255, 255, 255, 0.12);
+        }
+
+        body[data-theme="amoled"] {
+            --bg-body: #000000;
+            --bg-surface: rgba(10, 10, 15, var(--card-opacity));
+            --bg-surface-alt: rgba(5, 5, 8, calc(var(--card-opacity) * 0.9));
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border-base: rgba(255, 255, 255, 0.1);
+        }
+
+        body[data-theme="glass"] {
+            --bg-body: #0b1120;
+            --bg-surface: rgba(30, 41, 59, var(--card-opacity));
+            --bg-surface-alt: rgba(15, 23, 42, calc(var(--card-opacity) * 0.8));
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-base: rgba(255, 255, 255, 0.18);
+        }
+
+        body[data-theme="neon"] {
+            --bg-body: #050508;
+            --bg-surface: rgba(24, 24, 27, var(--card-opacity));
+            --bg-surface-alt: rgba(9, 9, 11, calc(var(--card-opacity) * 0.85));
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --border-base: rgba(236, 72, 153, 0.25);
+        }
+
+        body[data-theme="pastel"] {
+            --bg-body: #fdf4f5;
+            --bg-surface: rgba(255, 255, 255, var(--card-opacity));
+            --bg-surface-alt: rgba(255, 241, 242, calc(var(--card-opacity) * 0.9));
+            --text-primary: #4c0519;
+            --text-secondary: #881337;
+            --border-base: rgba(254, 205, 211, 0.8);
+        }
+
+        body[data-theme="cyberpunk"] {
+            --bg-body: #090514;
+            --bg-surface: rgba(30, 20, 50, var(--card-opacity));
+            --bg-surface-alt: rgba(15, 10, 30, calc(var(--card-opacity) * 0.9));
+            --text-primary: #f0abfc;
+            --text-secondary: #e879f9;
+            --border-base: rgba(217, 70, 239, 0.35);
+        }
+
+        body[data-theme="emerald_forest"] {
+            --bg-body: #022c22;
+            --bg-surface: rgba(6, 78, 59, var(--card-opacity));
+            --bg-surface-alt: rgba(2, 44, 34, calc(var(--card-opacity) * 0.9));
+            --text-primary: #ecfdf5;
+            --text-secondary: #a7f3d0;
+            --border-base: rgba(52, 211, 153, 0.3);
+        }
+
+        html[data-shape="rounded"], body[data-shape="rounded"] { --radius-btn: 14px; --radius-card: 20px; --radius-badge: 12px; --radius-box: 14px; }
+        html[data-shape="pill"], body[data-shape="pill"] { --radius-btn: 9999px; --radius-card: 30px; --radius-badge: 9999px; --radius-box: 22px; }
+        html[data-shape="sharp"], body[data-shape="sharp"] { --radius-btn: 4px; --radius-card: 6px; --radius-badge: 4px; --radius-box: 4px; }
+
+        html, body {
+            scroll-behavior: smooth;
+            -webkit-tap-highlight-color: transparent;
+            font-family: var(--custom-font) !important;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            transition: background-color 0.35s ease, color 0.35s ease;
+            overflow-x: hidden;
+            background-image: var(--custom-bg-pattern), radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.15) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.15) 0%, transparent 40%);
+            background-attachment: fixed;
+            background-size: var(--pattern-size) var(--pattern-size), cover, cover;
+        }
+
+        body.low-perf *, body.low-perf {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            animation: none !important;
+            transition: none !important;
+            box-shadow: none !important;
+        }
+        body.low-perf {
+            background-image: none !important;
+            background-color: var(--bg-body) !important;
+        }
+
+        body[data-pattern="dots"] { --custom-bg-pattern: radial-gradient(circle, rgba(255, 255, 255, 0.22) 1.5px, transparent 1.5px); --pattern-size: 24px; }
+        body[data-pattern="grid"] { --custom-bg-pattern: linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px); --pattern-size: 32px; }
+        body[data-pattern="diagonal"] { --custom-bg-pattern: repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0, rgba(255,255,255,0.06) 1px, transparent 0, transparent 50%); --pattern-size: 20px; }
+        body[data-pattern="waves"] { --custom-bg-pattern: radial-gradient(circle at 0 0, transparent 70%, rgba(255,255,255,0.1) 70%); --pattern-size: 30px; }
+        body[data-pattern="none"] { --custom-bg-pattern: none; }
+
+        .font-mono-num { font-family: 'JetBrains Mono', monospace !important; }
+
+        .theme-surface {
+            background-color: var(--bg-surface);
+            border-color: var(--border-base);
+            color: var(--text-primary);
+            border-radius: var(--radius-card) !important;
+            backdrop-filter: blur(var(--blur-strength));
+            -webkit-backdrop-filter: blur(var(--blur-strength));
+            box-shadow: var(--shadow-depth);
+            transition: background-color 0.3s ease, border-color 0.3s ease, border-radius 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .theme-surface-alt {
+            background-color: var(--bg-surface-alt);
+            border-color: var(--border-base);
+            border-radius: var(--radius-card) !important;
+            backdrop-filter: blur(calc(var(--blur-strength) * 0.75));
+            -webkit-backdrop-filter: blur(calc(var(--blur-strength) * 0.75));
+            transition: all 0.25s ease;
+        }
+
+        .theme-text-muted { color: var(--text-secondary); }
+
+        .custom-btn {
+            border-radius: var(--radius-btn) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: var(--custom-font) !important;
+        }
+        .custom-btn:active { transform: scale(0.94); }
+
+        .custom-badge { border-radius: var(--radius-badge) !important; transition: border-radius 0.25s ease; }
+        .custom-card { border-radius: var(--radius-card) !important; transition: border-radius 0.25s ease; }
+        .custom-box { border-radius: var(--radius-box) !important; transition: border-radius 0.25s ease; }
+
+        .accent-bg { background-color: var(--accent); color: #ffffff; box-shadow: 0 4px 20px var(--accent-soft); }
+        .accent-bg:hover { background-color: var(--accent-light); }
+
+        .accent-soft-bg { background-color: var(--accent-soft); color: var(--accent-light); }
+        body[data-theme="light"] .accent-soft-bg { color: var(--accent-dark); }
+
+        .accent-text { color: var(--accent-light); }
+        body[data-theme="light"] .accent-text { color: var(--accent); }
+
+        .header-gradient {
+            background: linear-gradient(135deg, var(--header-grad-from), var(--header-grad-via), var(--header-grad-to));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-base);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            transition: background 0.5s ease;
+        }
+
+        @keyframes lessonSlideIn {
+            0% { opacity: 0; transform: translateY(18px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes slideLeftIn {
+            0% { opacity: 0; transform: translateX(26px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideRightIn {
+            0% { opacity: 0; transform: translateX(-26px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .lesson-animate { opacity: 0; animation: lessonSlideIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .day-switch-next { animation: slideLeftIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .day-switch-prev { animation: slideRightIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+        @keyframes activePulse {
+            0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow), 0 10px 25px -5px var(--accent-soft); }
+            50% { box-shadow: 0 0 0 12px rgba(0,0,0,0), 0 14px 35px -5px var(--accent-glow); }
+        }
+
+        .active-lesson-card {
+            border-color: var(--accent) !important;
+            border-width: 2px !important;
+            animation: lessonSlideIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards, activePulse 2.5s infinite;
+        }
+
+        .lesson-card-hover:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-light);
+            box-shadow: 0 12px 30px -5px rgba(0,0,0,0.15);
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 9999px; }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body data-theme="dark" data-shape="rounded" data-pattern="none" class="min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <div id="top-anchor"></div>
+
+    <!-- ШАПКА САЙТА -->
+    <header class="header-gradient text-white relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-black/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-7 relative z-10">
+            <div class="flex items-center justify-between gap-2 mb-4 flex-nowrap">
+                <div class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-1.5 custom-badge text-[11px] sm:text-xs font-semibold tracking-wide uppercase border border-white/20 shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 -ml-3.5"></span>
+                    <span class="truncate">2 сменя • 7г</span>
+                </div>
+
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <button onclick="openChatModal()" class="custom-btn inline-flex items-center gap-1 bg-emerald-600/80 hover:bg-emerald-600 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
+                        <i class="ph-fill ph-chat-circle-dots text-sm sm:text-base text-emerald-200"></i>
+                        <span>ЧАТ КЛАССА</span>
+                    </button>
+                    <button onclick="openGameModal()" class="custom-btn inline-flex items-center gap-1 bg-indigo-600/80 hover:bg-indigo-600 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
+                        <i class="ph-fill ph-squares-four text-sm sm:text-base text-cyan-200"></i>
+                        <span>ТЕТРИС</span>
+                    </button>
+                    <button onclick="openCustomizer()" class="custom-btn inline-flex items-center gap-1 bg-white/25 hover:bg-white/35 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
+                        <i class="ph-fill ph-paint-brush-broad text-sm sm:text-base text-amber-300 animate-spin" style="animation-duration: 8s;"></i>
+                        <span>Вид</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-4xl font-black tracking-tight flex items-center gap-2 drop-shadow-md">
+                        Расписание 7г класса <span class="text-red-300 drop-shadow animate-pulse">❤️</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm text-white/80 font-medium mt-1">
+                        Обычно с 12:20 • Вторник и Четверг с 13:10
+                    </p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-xl border border-white/25 custom-badge px-5 py-2.5 text-left sm:text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end shadow-lg">
+                    <div id="live-clock" class="text-xl sm:text-2xl font-extrabold font-mono-num tracking-tight leading-none drop-shadow">
+                        00:00:00.000
+                    </div>
+                    <div id="live-date" class="text-xs sm:text-sm text-white/85 font-medium mt-0 sm:mt-1">
+                        Загрузка даты...
+                    </div>
+                </div>
+            </div>
+
+            <!-- ВИДЖЕТ ЖИВОГО ТАЙМЕРА И СТОЛОВОЙ -->
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div id="status-banner" class="sm:col-span-2 bg-white/10 backdrop-blur-xl border border-white/25 custom-card p-4 sm:p-5 transition-all duration-300 shadow-2xl flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                        <div class="flex items-start sm:items-center gap-3.5">
+                            <div id="status-icon-box" class="w-12 h-12 custom-box bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl shrink-0 shadow-inner border border-white/20">
+                                ⏳
+                            </div>
+                            <div>
+                                <div id="status-badge" class="text-[11px] font-bold uppercase tracking-wider text-white/75 mb-0.5">
+                                    Статус учебного дня
+                                </div>
+                                <div id="status-title" class="text-base sm:text-lg font-extrabold text-white leading-snug drop-shadow-sm">
+                                    Определение времени...
+                                </div>
+                                <div id="status-subtitle" class="text-xs sm:text-sm text-white/85 mt-0.5">
+                                    Подождите секунду
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="countdown-box" class="hidden bg-black/30 backdrop-blur-md border border-white/20 custom-box px-4 py-2.5 text-center shrink-0 shadow-inner">
+                            <div id="countdown-label" class="text-[10px] uppercase tracking-wider text-white/80 font-bold">
+                                До конца урока
+                            </div>
+                            <div id="countdown-timer" class="text-base sm:text-lg font-mono-num font-extrabold text-amber-300 tracking-wider mt-0.5 drop-shadow">
+                                00:00:00.000
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="progress-container" class="hidden mt-4">
+                        <div class="flex justify-between text-xs text-white/90 font-semibold mb-1.5 px-1">
+                            <span id="progress-start-text">Начало</span>
+                            <span id="progress-percent-text">0.00%</span>
+                            <span id="progress-end-text">Конец</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-black/30 backdrop-blur-md rounded-full overflow-hidden p-0.5 border border-white/20">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-300 rounded-full transition-all duration-75 shadow-sm" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-xl border border-white/25 custom-card p-4 sm:p-5 flex flex-col justify-between shadow-2xl">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 custom-box bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-xl shrink-0">
+                            🍲
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-extrabold uppercase tracking-wider text-white/75">Столовая школы</div>
+                            <div class="text-xs font-bold text-white">Открытие 08:00 • Закрытие 16:25</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-center bg-black/30 backdrop-blur-md border border-white/20 custom-box py-2 px-3">
+                        <div id="canteen-status-label" class="text-[10px] uppercase tracking-wider text-white/70 font-bold">Статус столовой</div>
+                        <div id="canteen-timer" class="text-sm sm:text-base font-mono-num font-extrabold text-amber-300 tracking-wider mt-0.5">00:00:00.000</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="weekend-notice" class="hidden mt-3 bg-amber-400/20 backdrop-blur-md border border-amber-300/40 text-amber-100 custom-box px-4 py-2.5 text-xs sm:text-sm font-medium flex items-center gap-2">
+                <i class="ph-fill ph-sun-horizon text-lg text-amber-300 shrink-0"></i>
+                <span>Сегодня выходной! Автоматически открыто расписание на <b>Понедельник</b>.</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-grow w-full">
+
+        <!-- ВЫБОР ДНЯ НЕДЕЛИ -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-2.5 px-1">
+                <span class="text-xs font-bold uppercase tracking-wider theme-text-muted flex items-center gap-1.5">
+                    <i class="ph-bold ph-calendar accent-text text-sm"></i>
+                    День недели
+                </span>
+                <span id="selected-day-indicator" class="text-xs font-semibold accent-text"></span>
+            </div>
+
+            <div class="grid grid-cols-5 gap-1.5 sm:gap-2.5" id="day-tabs">
+                <button onclick="selectDay(1)" id="tab-1" class="day-tab custom-btn relative flex flex-col items-center justify-center py-3 px-1.5 font-bold text-sm border theme-surface">
+                    <span class="sm:hidden text-base font-extrabold">Пн</span>
+                    <span class="hidden sm:inline text-sm font-bold">Понедельник</span>
+                    <span id="today-dot-1" class="hidden mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded-full">Сегодня</span>
+                </button>
+                <button onclick="selectDay(2)" id="tab-2" class="day-tab custom-btn relative flex flex-col items-center justify-center py-3 px-1.5 font-bold text-sm border theme-surface">
+                    <span class="sm:hidden text-base font-extrabold">Вт</span>
+                    <span class="hidden sm:inline text-sm font-bold">Вторник</span>
+                    <span id="today-dot-2" class="hidden mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded-full">Сегодня</span>
+                </button>
+                <button onclick="selectDay(3)" id="tab-3" class="day-tab custom-btn relative flex flex-col items-center justify-center py-3 px-1.5 font-bold text-sm border theme-surface">
+                    <span class="sm:hidden text-base font-extrabold">Ср</span>
+                    <span class="hidden sm:inline text-sm font-bold">Среда</span>
+                    <span id="today-dot-3" class="hidden mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded-full">Сегодня</span>
+                </button>
+                <button onclick="selectDay(4)" id="tab-4" class="day-tab custom-btn relative flex flex-col items-center justify-center py-3 px-1.5 font-bold text-sm border theme-surface">
+                    <span class="sm:hidden text-base font-extrabold">Чт</span>
+                    <span class="hidden sm:inline text-sm font-bold">Четверг</span>
+                    <span id="today-dot-4" class="hidden mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded-full">Сегодня</span>
+                </button>
+                <button onclick="selectDay(5)" id="tab-5" class="day-tab custom-btn relative flex flex-col items-center justify-center py-3 px-1.5 font-bold text-sm border theme-surface">
+                    <span class="sm:hidden text-base font-extrabold">Пт</span>
+                    <span class="hidden sm:inline text-sm font-bold">Пятница</span>
+                    <span id="today-dot-5" class="hidden mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded-full">Сегодня</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ОБЛАСТЬ РАСПИСАНИЯ -->
+        <div id="schedule-area">
+            <div id="day-header-card" class="theme-surface p-4 sm:p-5 border shadow-xl mb-4 flex flex-col gap-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 custom-box accent-soft-bg flex items-center justify-center text-2xl font-bold shrink-0 border border-current/20">
+                            <i class="ph-duotone ph-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h2 id="day-title" class="text-lg sm:text-xl font-extrabold">Понедельник</h2>
+                            <p id="day-Meta" class="text-xs sm:text-sm theme-text-muted">Загрузка параметров дня...</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span id="day-hours-badge" class="theme-surface-alt border text-xs font-bold px-3 py-1.5 custom-badge flex items-center gap-1.5">
+                            <i class="ph-bold ph-clock accent-text"></i> 12:20 – 17:15
+                        </span>
+                        <span id="day-count-badge" class="accent-soft-bg border border-current/20 text-xs font-extrabold px-3 py-1.5 custom-badge">
+                            6 уроков
+                        </span>
+                    </div>
+                </div>
+
+                <div id="thursday-options" class="hidden pt-3 border-t border-slate-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                    <div class="flex items-center gap-2 font-semibold">
+                        <i class="ph-fill ph-info accent-text text-base"></i>
+                        <span>В четверг основные уроки начинаются в <b>13:10</b>:</span>
+                    </div>
+                    <div class="inline-flex theme-surface-alt p-1 custom-badge border self-start sm:self-auto gap-1">
+                        <button onclick="setThursdayMode('start1310')" id="thu-mode-1310" class="custom-btn px-3 py-1.5 font-bold text-xs">
+                            С 13:10 (Англ. яз.)
+                        </button>
+                        <button onclick="setThursdayMode('withPracticum')" id="thu-mode-prac" class="custom-btn px-3 py-1.5 font-bold text-xs">
+                            + Практикум в 12:20
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lessons-list" class="space-y-3"></div>
+        </div>
+
+    </main>
+
+    <!-- МОДАЛЬНОЕ ОКНО ЧАТА КЛАССА -->
+    <div id="chat-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 modal-backdrop transition-opacity">
+        <div class="theme-surface border w-full max-w-lg p-5 sm:p-6 shadow-2xl flex flex-col rounded-3xl animate-[lessonSlideIn_0.25s_ease-out] h-[85vh] sm:h-[80vh]">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-500/20 mb-3 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 custom-badge bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl">
+                        💬
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold">ЧАТ 7Г КЛАССА</h3>
+                        <p class="text-xs theme-text-muted">Общайтесь с одноклассниками в реальном времени</p>
+                    </div>
+                </div>
+                <button onclick="closeChatModal()" class="custom-btn theme-surface-alt border w-9 h-9 flex items-center justify-center text-lg">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Экран ввода пин-кода -->
+            <div id="chat-auth-view" class="flex-grow flex flex-col items-center justify-center p-4 text-center">
+                <div class="w-16 h-16 custom-box bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-3xl mb-4 shadow-inner">
+                    🔒
+                </div>
+                <h4 class="text-base sm:text-lg font-extrabold mb-1">Введите секретный PIN-код</h4>
+                <p class="text-xs theme-text-muted mb-4">Доступ только для учеников 7г класса (пин: 107)</p>
+                <div class="w-full max-w-xs space-y-3">
+                    <input type="password" id="chat-pin-input" placeholder="PIN-код" class="w-full custom-badge border theme-surface-alt px-4 py-3 text-center text-lg font-mono-num tracking-widest focus:outline-none">
+                    <div id="chat-pin-error" class="hidden text-xs font-bold text-red-400">Неверный PIN-код!</div>
+                    <button onclick="verifyChatPin()" class="w-full custom-btn accent-bg py-3 text-sm font-extrabold shadow-xl">Войти в чат</button>
+                </div>
+            </div>
+
+            <!-- Экран самого чата -->
+            <div id="chat-main-view" class="hidden flex-grow flex flex-col overflow-hidden">
+                <div class="flex items-center justify-between py-2 px-3 theme-surface-alt border custom-badge mb-3 text-xs shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span>Ваш ник:</span>
+                        <input type="text" id="chat-nickname" onchange="updateNickname(this.value)" class="bg-black/30 border border-white/20 rounded px-2 py-1 font-bold text-xs w-32 focus:outline-none" value="Ученик 7Г">
+                    </div>
+                    <span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Онлайн</span>
+                </div>
+
+                <div id="chat-messages-container" class="flex-grow overflow-y-auto space-y-3 p-3 theme-surface-alt border custom-box mb-3">
+                    <!-- Сообщения будут подгружаться сюда -->
+                </div>
+
+                <div class="flex gap-2 shrink-0">
+                    <input type="text" id="chat-input" onkeydown="if(event.key==='Enter') sendChatMessage()" placeholder="Написать сообщение..." class="flex-grow custom-badge border theme-surface-alt px-4 py-3 text-sm focus:outline-none">
+                    <button onclick="sendChatMessage()" class="custom-btn accent-bg px-5 py-3 text-sm font-extrabold shadow-md shrink-0">
+                        <i class="ph-bold ph-paper-plane-tilt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ИГРЫ ТЕТРИС -->
+    <div id="game-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 modal-backdrop transition-opacity">
+        <div class="theme-surface border w-full max-w-md p-5 sm:p-6 shadow-2xl flex flex-col rounded-3xl animate-[lessonSlideIn_0.25s_ease-out] text-center">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-500/20 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 custom-badge bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-xl">
+                        🎮
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold">РЕТРО ТЕТРИС</h3>
+                        <p class="text-xs theme-text-muted">Управляйте фигуками, собирайте линии!</p>
+                    </div>
+                </div>
+                <button onclick="closeGameModal()" class="custom-btn theme-surface-alt border w-9 h-9 flex items-center justify-center text-lg">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Игровое поле Тетриса -->
+            <div class="relative w-full flex justify-center bg-slate-950/90 border border-white/20 custom-card p-3 shadow-inner">
+                <canvas id="tetrisCanvas" width="200" height="400" class="block bg-black/60 border border-white/10 rounded"></canvas>
+                <div class="ml-4 flex flex-col justify-between text-left text-xs">
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-white/60">Счёт</div>
+                        <div id="tetris-score" class="text-lg font-mono-num font-extrabold text-amber-300">0</div>
+                    </div>
+                    <div class="my-3">
+                        <div class="text-[10px] uppercase font-bold text-white/60">Линии</div>
+                        <div id="tetris-lines" class="text-lg font-mono-num font-extrabold text-emerald-400">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-white/60">Рекорд</div>
+                        <div id="tetris-highscore" class="text-lg font-mono-num font-extrabold text-cyan-300">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки управления на экране для телефонов -->
+            <div class="grid grid-cols-4 gap-2 mt-4">
+                <button onclick="tetrisMove(-1)" class="custom-btn theme-surface-alt border py-2.5 font-extrabold text-sm">◀️</button>
+                <button onclick="tetrisRotate()" class="custom-btn theme-surface-alt border py-2.5 font-extrabold text-sm">🔄</button>
+                <button onclick="tetrisDrop()" class="custom-btn theme-surface-alt border py-2.5 font-extrabold text-sm">⬇️</button>
+                <button onclick="tetrisMove(1)" class="custom-btn theme-surface-alt border py-2.5 font-extrabold text-sm">▶️</button>
+            </div>
+
+            <div class="mt-4">
+                <button onclick="startTetrisGame()" class="w-full custom-btn accent-bg py-3 text-sm font-extrabold shadow-xl">Старт / Рестарт</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО КАСТОМИЗАЦИИ -->
+    <div id="customizer-modal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 modal-backdrop transition-opacity">
+        <div class="theme-surface border w-full max-w-2xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl animate-[lessonSlideIn_0.25s_ease-out]">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-500/20">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 custom-badge accent-soft-bg border border-current/20 flex items-center justify-center text-xl">
+                        🎨
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold">Кастомизация</h3>
+                        <p class="text-xs theme-text-muted">Темы, палитры, шрифты, формат таймеров</p>
+                    </div>
+                </div>
+                <button onclick="closeCustomizer()" class="custom-btn theme-surface-alt border w-9 h-9 flex items-center justify-center text-lg">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6 my-5 text-sm">
+                <!-- Оптимизация для слабых устройств -->
+                <div class="theme-surface-alt p-3.5 border custom-badge flex items-center justify-between">
+                    <div>
+                        <div class="font-extrabold text-xs">🚀 Режим для слабых устройств</div>
+                        <div class="text-[11px] theme-text-muted">Отключает размытие, тени и анимации для максимальной скорости</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="low-perf-toggle" onchange="toggleLowPerf(this.checked)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+
+                <!-- НАСТРОЙКА ФОРМАТА ТАЙМЕРОВ -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider theme-text-muted mb-2.5">⏱️ Формат отображения таймеров</label>
+                    <select id="timer-format-select" onchange="setTimerFormat(this.value)" class="w-full custom-badge border theme-surface-alt px-3 py-2.5 text-sm font-semibold focus:outline-none">
+                        <option value="full">Полный (Часы:Минуты:Секунды.Миллисекунды)</option>
+                        <option value="secs_ms">Только Секунды и Миллисекунды (.SSS)</option>
+                        <option value="secs_only">Только Секунды (00с)</option>
+                        <option value="mins_only">Только Минуты (00м)</option>
+                        <option value="hours_only">Только Часы (00ч)</option>
+                        <option value="compact">Компактный (без миллисекунд HH:MM:SS)</option>
+                    </select>
+                </div>
+
+                <!-- 1. Темы оформления -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider theme-text-muted mb-2.5">1. Тема оформления (8 вариантов)</label>
+                    <div class="grid grid-cols-3 sm:grid-cols-3 gap-2.5" id="theme-selector">
+                        <button onclick="setAppTheme('light')" data-val="light" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-sun text-xl text-amber-500"></i><span>Светлая</span>
+                        </button>
+                        <button onclick="setAppTheme('dark')" data-val="dark" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-moon-stars text-xl text-indigo-400"></i><span>Тёмная</span>
+                        </button>
+                        <button onclick="setAppTheme('amoled')" data-val="amoled" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-sparkle text-xl text-emerald-400"></i><span>Кибер Black</span>
+                        </button>
+                        <button onclick="setAppTheme('glass')" data-val="glass" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-cube-transparent text-xl text-cyan-400"></i><span>Стекло</span>
+                        </button>
+                        <button onclick="setAppTheme('neon')" data-val="neon" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-lightning text-xl text-pink-400"></i><span>Неон</span>
+                        </button>
+                        <button onclick="setAppTheme('pastel')" data-val="pastel" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-heart text-xl text-rose-400"></i><span>Пастель</span>
+                        </button>
+                        <button onclick="setAppTheme('cyberpunk')" data-val="cyberpunk" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-gamepad text-xl text-fuchsia-400"></i><span>Киберпанк</span>
+                        </button>
+                        <button onclick="setAppTheme('emerald_forest')" data-val="emerald_forest" class="theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold">
+                            <i class="ph-duotone ph-tree text-xl text-emerald-300"></i><span>Изумруд</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Акцентные цвета -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider theme-text-muted mb-2.5">2. Акцентный цвет (16 вариантов)</label>
+                    <div class="grid grid-cols-4 sm:grid-cols-4 gap-2" id="color-selector">
+                        <button onclick="setAppAccent('indigo')" data-val="indigo" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-indigo-600 shrink-0"></span>Индиго</button>
+                        <button onclick="setAppAccent('emerald')" data-val="emerald" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-emerald-600 shrink-0"></span>Изумруд</button>
+                        <button onclick="setAppAccent('rose')" data-val="rose" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-rose-600 shrink-0"></span>Роза</button>
+                        <button onclick="setAppAccent('amber')" data-val="amber" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-amber-500 shrink-0"></span>Янтарь</button>
+                        <button onclick="setAppAccent('cyan')" data-val="cyan" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-cyan-600 shrink-0"></span>Океан</button>
+                        <button onclick="setAppAccent('violet')" data-val="violet" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-purple-600 shrink-0"></span>Фиолет</button>
+                        <button onclick="setAppAccent('blue')" data-val="blue" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-blue-600 shrink-0"></span>Синий</button>
+                        <button onclick="setAppAccent('teal')" data-val="teal" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-teal-600 shrink-0"></span>Тиаль</button>
+                        <button onclick="setAppAccent('fuchsia')" data-val="fuchsia" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-fuchsia-600 shrink-0"></span>Фуксия</button>
+                        <button onclick="setAppAccent('orange')" data-val="orange" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-orange-500 shrink-0"></span>Апельсин</button>
+                        <button onclick="setAppAccent('lime')" data-val="lime" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-lime-500 shrink-0"></span>Лайм</button>
+                        <button onclick="setAppAccent('ruby')" data-val="ruby" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-red-600 shrink-0"></span>Рубин</button>
+                        <button onclick="setAppAccent('gold')" data-val="gold" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-yellow-500 shrink-0"></span>Золото</button>
+                        <button onclick="setAppAccent('mint')" data-val="mint" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-teal-400 shrink-0"></span>Мята</button>
+                        <button onclick="setAppAccent('lavender')" data-val="lavender" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-indigo-400 shrink-0"></span>Лаванда</button>
+                        <button onclick="setAppAccent('coral')" data-val="coral" class="color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold"><span class="w-4 h-4 rounded-full bg-rose-400 shrink-0"></span>Коралл</button>
+                    </div>
+                </div>
+
+                <!-- 3. Форма элементов -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider theme-text-muted mb-2.5">3. Форма кнопок и карточек</label>
+                    <div class="grid grid-cols-3 gap-2.5" id="shape-selector">
+                        <button onclick="setAppShape('rounded')" data-val="rounded" class="shape-opt custom-btn border p-2.5 flex flex-col items-center gap-1 text-xs font-bold">Мягкие</button>
+                        <button onclick="setAppShape('pill')" data-val="pill" class="shape-opt custom-btn border p-2.5 flex flex-col items-center gap-1 text-xs font-bold">Капсула</button>
+                        <button onclick="setAppShape('sharp')" data-val="sharp" class="shape-opt custom-btn border p-2.5 flex flex-col items-center gap-1 text-xs font-bold">Строгие</button>
+                    </div>
+                </div>
+
+                <!-- 4. Шрифты -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider theme-text-muted mb-2.5">4. Шрифт интерфейса</label>
+                    <select id="font-select" onchange="setAppFont(this.value)" class="w-full custom-badge border theme-surface-alt px-3 py-2.5 text-sm font-semibold focus:outline-none">
+                        <option value="'Inter', sans-serif">Inter (Современный)</option>
+                        <option value="'Rubik', sans-serif">Rubik (Мягкий)</option>
+                        <option value="'Montserrat', sans-serif">Montserrat (Геометричный)</option>
+                        <option value="'Poppins', sans-serif">Poppins (Плавный)</option>
+                        <option value="'JetBrains Mono', monospace">JetBrains Mono (Код)</option>
+                        <option value="'Cinzel', serif">Cinzel (Элегантный)</option>
+                        <option value="'Pacifico', cursive">Pacifico (Рукописный)</option>
+                    </select>
+                </div>
+
+                <!-- 5. Фоновые паттерны -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider theme-text-muted mb-2.5">5. Фоновый паттерн текстуры</label>
+                    <div class="grid grid-cols-5 gap-2" id="pattern-selector">
+                        <button onclick="setAppPattern('none')" data-val="none" class="pattern-opt custom-btn border p-2 text-xs font-bold">Чистый</button>
+                        <button onclick="setAppPattern('dots')" data-val="dots" class="pattern-opt custom-btn border p-2 text-xs font-bold">Точки</button>
+                        <button onclick="setAppPattern('grid')" data-val="grid" class="pattern-opt custom-btn border p-2 text-xs font-bold">Сетка</button>
+                        <button onclick="setAppPattern('diagonal')" data-val="diagonal" class="pattern-opt custom-btn border p-2 text-xs font-bold">Линии</button>
+                        <button onclick="setAppPattern('waves')" data-val="waves" class="pattern-opt custom-btn border p-2 text-xs font-bold">Волны</button>
+                    </div>
+                </div>
+
+                <!-- 6. Прозрачность и Размытие -->
+                <div class="space-y-3 pt-2 border-t border-slate-500/20">
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="theme-text-muted">Прозрачность стекла (Opacity)</span>
+                            <span id="opacity-val">0.65</span>
+                        </div>
+                        <input type="range" min="0.2" max="0.95" step="0.05" value="0.65" oninput="setAppOpacity(this.value)" class="w-full accent-bg cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="theme-text-muted">Размытие фона (Blur)</span>
+                            <span id="blur-val">20px</span>
+                        </div>
+                        <input type="range" min="4" max="36" step="2" value="20" oninput="setAppBlur(this.value)" class="w-full accent-bg cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-500/20 flex items-center justify-between gap-3">
+                <button onclick="resetCustomizations()" class="custom-btn theme-surface-alt border px-4 py-2 text-xs font-bold theme-text-muted">
+                    Сбросить всё
+                </button>
+                <button onclick="closeCustomizer()" class="custom-btn accent-bg px-6 py-2.5 text-xs sm:text-sm font-extrabold shadow-md">
+                    Сохранить ✨
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПЛАВАЮЩАЯ КНОПКА -->
+    <div id="floating-actions" class="fixed bottom-5 right-4 z-40 flex flex-col gap-2.5 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
+        <button onclick="openChatModal()" title="Чат" class="custom-btn bg-emerald-600 hover:bg-emerald-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
+            💬
+        </button>
+        <button onclick="openGameModal()" title="Тетрис" class="custom-btn bg-indigo-600 hover:bg-indigo-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
+            🎮
+        </button>
+        <button onclick="scrollToActiveOrTop()" title="Наверх" class="custom-btn accent-bg w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
+            <i class="ph-bold ph-arrow-up"></i>
+        </button>
+    </div>
+
+    <!-- ПОДВАЛ -->
+    <footer class="theme-surface border-t py-5 px-4 text-center text-xs theme-text-muted mt-auto">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p class="font-bold">Расписание 7г класса • Облачный чат и Тетрис ❤️</p>
+            <div class="flex items-center gap-3">
+                <span>Столовая: 08:00 – 16:25</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* --- ОБЛАЧНЫЙ ЧАТ FIREBASE --- */
+        const BAD_WORDS = ['сука', 'блять', 'хуй', 'пизда', 'ебать', 'ебал', 'залупа', 'мразь', 'шлюха', 'сучка', 'гандон', 'чмо', 'урод', 'fuck', 'shit', 'bitch', 'cunt', 'whore', 'asshole'];
+        function containsProfanity(text) {
+            const lower = text.toLowerCase();
+            return BAD_WORDS.some(word => lower.includes(word));
+        }
+
+        let isChatAuthenticated = localStorage.getItem('7g_chat_auth_107') === 'true';
+        let currentNickname = localStorage.getItem('7g_nickname_107') || ('Ученик ' + Math.floor(Math.random() * 89 + 10));
+        window.currentNickname = currentNickname;
+
+        function openChatModal() {
+            document.getElementById('chat-modal').classList.remove('hidden');
+            if (isChatAuthenticated) {
+                document.getElementById('chat-auth-view').classList.add('hidden');
+                document.getElementById('chat-main-view').classList.remove('hidden');
+                document.getElementById('chat-nickname').value = currentNickname;
+                renderChatMessages();
+            } else {
+                document.getElementById('chat-auth-view').classList.remove('hidden');
+                document.getElementById('chat-main-view').classList.add('hidden');
+            }
+        }
+
+        function closeChatModal() {
+            document.getElementById('chat-modal').classList.add('hidden');
+        }
+        document.getElementById('chat-modal').addEventListener('click', (e) => { if (e.target.id === 'chat-modal') closeChatModal(); });
+
+        function verifyChatPin() {
+            const pin = document.getElementById('chat-pin-input').value.trim();
+            if (pin === '107') {
+                isChatAuthenticated = true;
+                localStorage.setItem('7g_chat_auth_107', 'true');
+                document.getElementById('chat-pin-error').classList.add('hidden');
+                document.getElementById('chat-auth-view').classList.add('hidden');
+                document.getElementById('chat-main-view').classList.remove('hidden');
+                document.getElementById('chat-nickname').value = currentNickname;
+                renderChatMessages();
+            } else {
+                document.getElementById('chat-pin-error').classList.remove('hidden');
+            }
+        }
+
+        function updateNickname(val) {
+            currentNickname = val.trim() || 'Ученик 7Г';
+            window.currentNickname = currentNickname;
+            localStorage.setItem('7g_nickname_107', currentNickname);
+        }
+
+        // Вызов отправки сообщения в Firebase из модуля
+        function sendChatMessage() {
+            if (window.sendFirebaseMessage) {
+                window.sendFirebaseMessage();
+            }
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages-container');
+            const msgs = window.firebaseMessages || [];
+            container.innerHTML = '';
+
+            if (msgs.length === 0) {
+                container.innerHTML = `<div class="text-center text-xs theme-text-muted py-6">В чате пока нет сообщений. Напишите первыми! 👋</div>`;
+                return;
+            }
+
+            msgs.forEach(msg => {
+                const isMe = msg.sender === currentNickname;
+                const div = document.createElement('div');
+                div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+                div.innerHTML = `
+                    <div class="text-[10px] font-bold theme-text-muted mb-0.5 px-1">${escapeHtml(msg.sender)} • ${msg.time}</div>
+                    <div class="max-w-[85%] px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-medium ${isMe ? 'accent-bg shadow-sm' : 'theme-surface border'} break-words">
+                        ${escapeHtml(msg.text)}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        const ACCENT_PALETTES = {
+            indigo:  { accent: '#4f46e5', light: '#6366f1', dark: '#3730a3', soft: 'rgba(79, 70, 229, 0.18)', glow: 'rgba(79, 70, 229, 0.4)', gradFrom: 'rgba(79, 70, 229, 0.85)', gradVia: 'rgba(67, 56, 202, 0.85)', gradTo: 'rgba(109, 40, 217, 0.85)' },
+            emerald: { accent: '#059669', light: '#10b981', dark: '#065f46', soft: 'rgba(16, 185, 129, 0.18)', glow: 'rgba(16, 185, 129, 0.4)', gradFrom: 'rgba(5, 150, 105, 0.85)', gradVia: 'rgba(4, 120, 87, 0.85)', gradTo: 'rgba(15, 118, 110, 0.85)' },
+            rose:    { accent: '#e11d48', light: '#f43f5e', dark: '#9f1239', soft: 'rgba(244, 63, 94, 0.18)', glow: 'rgba(244, 63, 94, 0.4)', gradFrom: 'rgba(225, 29, 72, 0.85)', gradVia: 'rgba(190, 18, 60, 0.85)', gradTo: 'rgba(157, 23, 77, 0.85)' },
+            amber:   { accent: '#d97706', light: '#f59e0b', dark: '#92400e', soft: 'rgba(245, 158, 11, 0.18)', glow: 'rgba(245, 158, 11, 0.4)', gradFrom: 'rgba(217, 119, 6, 0.85)', gradVia: 'rgba(180, 83, 9, 0.85)', gradTo: 'rgba(194, 65, 12, 0.85)' },
+            cyan:    { accent: '#0284c7', light: '#0ea5e9', dark: '#075985', soft: 'rgba(14, 165, 233, 0.18)', glow: 'rgba(14, 165, 233, 0.4)', gradFrom: 'rgba(2, 132, 199, 0.85)', gradVia: 'rgba(3, 105, 161, 0.85)', gradTo: 'rgba(29, 78, 216, 0.85)' },
+            violet:  { accent: '#7c3aed', light: '#8b5cf6', dark: '#5b21b6', soft: 'rgba(139, 92, 246, 0.18)', glow: 'rgba(139, 92, 246, 0.4)', gradFrom: 'rgba(124, 58, 237, 0.85)', gradVia: 'rgba(109, 40, 217, 0.85)', gradTo: 'rgba(147, 51, 234, 0.85)' },
+            blue:    { accent: '#2563eb', light: '#3b82f6', dark: '#1d4ed8', soft: 'rgba(59, 130, 246, 0.18)', glow: 'rgba(59, 130, 246, 0.4)', gradFrom: 'rgba(37, 99, 235, 0.85)', gradVia: 'rgba(29, 78, 216, 0.85)', gradTo: 'rgba(30, 58, 138, 0.85)' },
+            teal:    { accent: '#0d9488', light: '#14b8a6', dark: '#115e59', soft: 'rgba(20, 184, 166, 0.18)', glow: 'rgba(20, 184, 166, 0.4)', gradFrom: 'rgba(13, 148, 136, 0.85)', gradVia: 'rgba(15, 118, 110, 0.85)', gradTo: 'rgba(17, 94, 89, 0.85)' },
+            fuchsia: { accent: '#c026d3', light: '#d946ef', dark: '#86198f', soft: 'rgba(217, 70, 239, 0.18)', glow: 'rgba(217, 70, 239, 0.4)', gradFrom: 'rgba(192, 38, 211, 0.85)', gradVia: 'rgba(162, 28, 175, 0.85)', gradTo: 'rgba(134, 25, 143, 0.85)' },
+            orange:  { accent: '#ea580c', light: '#f97316', dark: '#c2410c', soft: 'rgba(249, 115, 22, 0.18)', glow: 'rgba(249, 115, 22, 0.4)', gradFrom: 'rgba(234, 88, 12, 0.85)', gradVia: 'rgba(194, 65, 12, 0.85)', gradTo: 'rgba(154, 52, 18, 0.85)' },
+            lime:    { accent: '#65a30d', light: '#84cc16', dark: '#4d7c0f', soft: 'rgba(132, 204, 22, 0.18)', glow: 'rgba(132, 204, 22, 0.4)', gradFrom: 'rgba(101, 163, 13, 0.85)', gradVia: 'rgba(77, 124, 15, 0.85)', gradTo: 'rgba(63, 98, 18, 0.85)' },
+            ruby:    { accent: '#dc2626', light: '#ef4444', dark: '#991b1b', soft: 'rgba(239, 68, 68, 0.18)', glow: 'rgba(239, 68, 68, 0.4)', gradFrom: 'rgba(220, 38, 38, 0.85)', gradVia: 'rgba(185, 28, 28, 0.85)', gradTo: 'rgba(153, 27, 27, 0.85)' },
+            gold:    { accent: '#eab308', light: '#facc15', dark: '#a16207', soft: 'rgba(234, 179, 8, 0.18)', glow: 'rgba(234, 179, 8, 0.4)', gradFrom: 'rgba(234, 179, 8, 0.85)', gradVia: 'rgba(202, 138, 4, 0.85)', gradTo: 'rgba(161, 98, 7, 0.85)' },
+            mint:    { accent: '#2dd4bf', light: '#5eead4', dark: '#0f766e', soft: 'rgba(45, 212, 191, 0.18)', glow: 'rgba(45, 212, 191, 0.4)', gradFrom: 'rgba(45, 212, 191, 0.85)', gradVia: 'rgba(20, 184, 166, 0.85)', gradTo: 'rgba(15, 118, 110, 0.85)' },
+            lavender:{ accent: '#818cf8', light: '#a5b4fc', dark: '#4338ca', soft: 'rgba(129, 140, 248, 0.18)', glow: 'rgba(129, 140, 248, 0.4)', gradFrom: 'rgba(129, 140, 248, 0.85)', gradVia: 'rgba(99, 102, 241, 0.85)', gradTo: 'rgba(67, 56, 202, 0.85)' },
+            coral:   { accent: '#fb7185', light: '#fda4af', dark: '#be123c', soft: 'rgba(251, 113, 133, 0.18)', glow: 'rgba(251, 113, 133, 0.4)', gradFrom: 'rgba(251, 113, 133, 0.85)', gradVia: 'rgba(244, 63, 94, 0.85)', gradTo: 'rgba(190, 18, 60, 0.85)' }
+        };
+
+        let userConfig = {
+            theme: localStorage.getItem('7g_theme_107') || 'dark',
+            accent: localStorage.getItem('7g_accent_107') || 'indigo',
+            shape: localStorage.getItem('7g_shape_107') || 'rounded',
+            font: localStorage.getItem('7g_font_107') || "'Inter', sans-serif",
+            pattern: localStorage.getItem('7g_pattern_107') || 'none',
+            opacity: localStorage.getItem('7g_opacity_107') || '0.65',
+            blur: localStorage.getItem('7g_blur_107') || '20px',
+            lowPerf: localStorage.getItem('7g_low_perf_107') === 'true',
+            timerFormat: localStorage.getItem('7g_timer_format_107') || 'full'
+        };
+
+        const SHAPE_PRESETS = {
+            rounded: { btn: '14px', card: '20px', badge: '12px', box: '14px' },
+            pill:    { btn: '9999px', card: '30px', badge: '9999px', box: '22px' },
+            sharp:   { btn: '4px', card: '6px', badge: '4px', box: '4px' }
+        };
+
+        function applyCustomizations() {
+            const root = document.documentElement;
+            root.setAttribute('data-theme', userConfig.theme);
+            root.setAttribute('data-shape', userConfig.shape);
+            root.setAttribute('data-pattern', userConfig.pattern);
+            document.body.setAttribute('data-theme', userConfig.theme);
+            document.body.setAttribute('data-shape', userConfig.shape);
+            document.body.setAttribute('data-pattern', userConfig.pattern);
+
+            if (userConfig.lowPerf) {
+                document.body.classList.add('low-perf');
+                document.getElementById('low-perf-toggle').checked = true;
+            } else {
+                document.body.classList.remove('low-perf');
+                document.getElementById('low-perf-toggle').checked = false;
+            }
+
+            root.style.setProperty('--custom-font', userConfig.font);
+            root.style.setProperty('--card-opacity', userConfig.opacity);
+            root.style.setProperty('--blur-strength', userConfig.blur);
+
+            const s = SHAPE_PRESETS[userConfig.shape] || SHAPE_PRESETS.rounded;
+            root.style.setProperty('--radius-btn', s.btn);
+            root.style.setProperty('--radius-card', s.card);
+            root.style.setProperty('--radius-badge', s.badge);
+            root.style.setProperty('--radius-box', s.box);
+
+            const p = ACCENT_PALETTES[userConfig.accent] || ACCENT_PALETTES.indigo;
+            root.style.setProperty('--accent', p.accent);
+            root.style.setProperty('--accent-light', p.light);
+            root.style.setProperty('--accent-dark', p.dark);
+            root.style.setProperty('--accent-soft', p.soft);
+            root.style.setProperty('--accent-glow', p.glow);
+            root.style.setProperty('--header-grad-from', p.gradFrom);
+            root.style.setProperty('--header-grad-via', p.gradVia);
+            root.style.setProperty('--header-grad-to', p.gradTo);
+
+            document.querySelectorAll('.theme-opt').forEach(btn => {
+                btn.className = `theme-opt custom-btn border p-3 flex flex-col items-center gap-1.5 text-xs font-bold ${btn.getAttribute('data-val') === userConfig.theme ? 'accent-bg border-transparent shadow-lg' : 'theme-surface-alt'}`;
+            });
+            document.querySelectorAll('.color-opt').forEach(btn => {
+                btn.className = `color-opt custom-btn border p-2 flex items-center gap-2 text-xs font-bold ${btn.getAttribute('data-val') === userConfig.accent ? 'ring-2 ring-offset-1 ring-current accent-soft-bg' : 'theme-surface-alt'}`;
+            });
+            document.querySelectorAll('.shape-opt').forEach(btn => {
+                btn.className = `shape-opt custom-btn border p-2.5 flex flex-col items-center gap-1 text-xs font-bold ${btn.getAttribute('data-val') === userConfig.shape ? 'accent-bg border-transparent shadow-lg' : 'theme-surface-alt'}`;
+            });
+            document.querySelectorAll('.pattern-opt').forEach(btn => {
+                btn.className = `pattern-opt custom-btn border p-2 text-xs font-bold ${btn.getAttribute('data-val') === userConfig.pattern ? 'accent-bg border-transparent shadow-lg' : 'theme-surface-alt'}`;
+            });
+
+            document.getElementById('font-select').value = userConfig.font;
+            document.getElementById('timer-format-select').value = userConfig.timerFormat;
+            document.getElementById('opacity-val').innerText = userConfig.opacity;
+            document.getElementById('blur-val').innerText = userConfig.blur;
+
+            updateDayTabsUI();
+            renderLessonsForSelectedDay(false);
+        }
+
+        function setAppTheme(t) { userConfig.theme = t; localStorage.setItem('7g_theme_107', t); applyCustomizations(); }
+        function setAppAccent(a) { userConfig.accent = a; localStorage.setItem('7g_accent_107', a); applyCustomizations(); }
+        function setAppShape(s) { userConfig.shape = s; localStorage.setItem('7g_shape_107', s); applyCustomizations(); }
+        function setAppFont(f) { userConfig.font = f; localStorage.setItem('7g_font_107', f); applyCustomizations(); }
+        function setAppPattern(p) { userConfig.pattern = p; localStorage.setItem('7g_pattern_107', p); applyCustomizations(); }
+        function setTimerFormat(tf) { userConfig.timerFormat = tf; localStorage.setItem('7g_timer_format_107', tf); applyCustomizations(); }
+        function setAppOpacity(o) { userConfig.opacity = o; localStorage.setItem('7g_opacity_107', o); document.getElementById('opacity-val').innerText = o; applyCustomizations(); }
+        function setAppBlur(b) { userConfig.blur = b + 'px'; localStorage.setItem('7g_blur_107', userConfig.blur); document.getElementById('blur-val').innerText = userConfig.blur; applyCustomizations(); }
+        function toggleLowPerf(checked) { userConfig.lowPerf = checked; localStorage.setItem('7g_low_perf_107', checked ? 'true' : 'false'); applyCustomizations(); }
+
+        function resetCustomizations() {
+            userConfig = { theme: 'dark', accent: 'indigo', shape: 'rounded', font: "'Inter', sans-serif", pattern: 'none', opacity: '0.65', blur: '20px', lowPerf: false, timerFormat: 'full' };
+            localStorage.clear();
+            applyCustomizations();
+        }
+
+        function openCustomizer() { document.getElementById('customizer-modal').classList.remove('hidden'); }
+        function closeCustomizer() { document.getElementById('customizer-modal').classList.add('hidden'); }
+        document.getElementById('customizer-modal').addEventListener('click', (e) => { if (e.target.id === 'customizer-modal') closeCustomizer(); });
+
+        /* --- ИГРА ТЕТРИС --- */
+        const COLS = 10;
+        const ROWS = 20;
+        const BLOCK_SIZE = 20;
+        let tetrisBoard = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        let tetrisScore = 0;
+        let tetrisLines = 0;
+        let tetrisHighScore = parseInt(localStorage.getItem('7g_tetris_highscore') || '0', 10);
+        let tetrisInterval = null;
+        let isTetrisActive = false;
+
+        const SHAPES = [
+            [],
+            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
+            [[2,0,0],[2,2,2],[0,0,0]], // J
+            [[0,0,3],[3,3,3],[0,0,0]], // L
+            [[4,4],[4,4]], // O
+            [[0,5,5],[5,5,0],[0,0,0]], // S
+            [[0,6,0],[6,6,6],[0,0,0]], // T
+            [[7,7,0],[0,7,7],[0,0,0]]  // Z
+        ];
+
+        const COLORS = [
+            null,
+            '#06b6d4', // I - Cyan
+            '#3b82f6', // J - Blue
+            '#f97316', // L - Orange
+            '#eab308', // O - Yellow
+            '#10b981', // S - Emerald
+            '#a855f7', // T - Purple
+            '#ef4444'  // Z - Red
+        ];
+
+        let currentPiece = {
+            shape: SHAPES[1],
+            color: 1,
+            x: 3,
+            y: 0
+        };
+
+        function openGameModal() {
+            document.getElementById('game-modal').classList.remove('hidden');
+            document.getElementById('tetris-highscore').innerText = tetrisHighScore;
+            startTetrisGame();
+        }
+
+        function closeGameModal() {
+            document.getElementById('game-modal').classList.add('hidden');
+            isTetrisActive = false;
+            if (tetrisInterval) clearInterval(tetrisInterval);
+        }
+        document.getElementById('game-modal').addEventListener('click', (e) => { if (e.target.id === 'game-modal') closeGameModal(); });
+
+        function startTetrisGame() {
+            tetrisBoard = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+            tetrisScore = 0;
+            tetrisLines = 0;
+            document.getElementById('tetris-score').innerText = tetrisScore;
+            document.getElementById('tetris-lines').innerText = tetrisLines;
+            spawnPiece();
+            isTetrisActive = true;
+            if (tetrisInterval) clearInterval(tetrisInterval);
+            tetrisInterval = setInterval(tetrisTick, 500);
+            drawTetris();
+        }
+
+        function spawnPiece() {
+            const rand = Math.floor(Math.random() * 7) + 1;
+            currentPiece.shape = SHAPES[rand];
+            currentPiece.color = rand;
+            currentPiece.x = Math.floor(COLS / 2) - Math.floor(currentPiece.shape[0].length / 2);
+            currentPiece.y = 0;
+            if (checkCollision(0, 0, currentPiece.shape)) {
+                isTetrisActive = false;
+                clearInterval(tetrisInterval);
+            }
+        }
+
+        function checkCollision(offsetX, offsetY, shape) {
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        let newX = currentPiece.x + c + offsetX;
+                        let newY = currentPiece.y + r + offsetY;
+                        if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+                        if (newY >= 0 && tetrisBoard[newY][newX]) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function mergePiece() {
+            currentPiece.shape.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val) {
+                        if (currentPiece.y + r >= 0) {
+                            tetrisBoard[currentPiece.y + r][currentPiece.x + c] = currentPiece.color;
+                        }
+                    }
+                });
+            });
+        }
+
+        function clearLines() {
+            let linesCleared = 0;
+            outer: for (let r = ROWS - 1; r >= 0; r--) {
+                for (let c = 0; c < COLS; c++) {
+                    if (!tetrisBoard[r][c]) continue outer;
+                }
+                const row = tetrisBoard.splice(r, 1)[0].fill(0);
+                tetrisBoard.unshift(row);
+                linesCleared++;
+                r++;
+            }
+            if (linesCleared > 0) {
+                tetrisLines += linesCleared;
+                tetrisScore += linesCleared * 100 * linesCleared;
+                document.getElementById('tetris-score').innerText = tetrisScore;
+                document.getElementById('tetris-lines').innerText = tetrisLines;
+                if (tetrisScore > tetrisHighScore) {
+                    tetrisHighScore = tetrisScore;
+                    localStorage.setItem('7g_tetris_highscore', tetrisHighScore);
+                    document.getElementById('tetris-highscore').innerText = tetrisHighScore;
+                }
+            }
+        }
+
+        function tetrisTick() {
+            if (!isTetrisActive) return;
+            if (!checkCollision(0, 1, currentPiece.shape)) {
+                currentPiece.y++;
+            } else {
+                mergePiece();
+                clearLines();
+                spawnPiece();
+            }
+            drawTetris();
+        }
+
+        function tetrisMove(dir) {
+            if (!isTetrisActive) return;
+            if (!checkCollision(dir, 0, currentPiece.shape)) {
+                currentPiece.x += dir;
+                drawTetris();
+            }
+        }
+
+        function tetrisDrop() {
+            if (!isTetrisActive) return;
+            while (!checkCollision(0, 1, currentPiece.shape)) {
+                currentPiece.y++;
+            }
+            mergePiece();
+            clearLines();
+            spawnPiece();
+            drawTetris();
+        }
+
+        function tetrisRotate() {
+            if (!isTetrisActive) return;
+            const rotated = currentPiece.shape[0].map((val, index) => currentPiece.shape.map(row => row[index]).reverse());
+            if (!checkCollision(0, 0, rotated)) {
+                currentPiece.shape = rotated;
+                drawTetris();
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById('game-modal').classList.contains('hidden')) return;
+            if (e.code === 'ArrowLeft') { e.preventDefault(); tetrisMove(-1); }
+            else if (e.code === 'ArrowRight') { e.preventDefault(); tetrisMove(1); }
+            else if (e.code === 'ArrowDown') { e.preventDefault(); tetrisTick(); }
+            else if (e.code === 'ArrowUp') { e.preventDefault(); tetrisRotate(); }
+            else if (e.code === 'Space') { e.preventDefault(); tetrisDrop(); }
+        });
+
+        function drawTetris() {
+            const canvas = document.getElementById('tetrisCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            tetrisBoard.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val) {
+                        ctx.fillStyle = COLORS[val];
+                        ctx.fillRect(c * BLOCK_SIZE, r * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                    }
+                });
+            });
+
+            currentPiece.shape.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val) {
+                        ctx.fillStyle = COLORS[currentPiece.color];
+                        ctx.fillRect((currentPiece.x + c) * BLOCK_SIZE, (currentPiece.y + r) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                    }
+                });
+            });
+        }
+
+        const BELL_SCHEDULE = {
+            6:  { start: "12:20", end: "13:00" },
+            7:  { start: "13:10", end: "13:50" },
+            8:  { start: "14:00", end: "14:40" },
+            9:  { start: "14:50", end: "15:30" },
+            10: { start: "15:45", end: "16:25" },
+            11: { start: "16:35", end: "17:15" },
+            12: { start: "17:25", end: "18:05" }
+        };
+
+        const DAY_NAMES = { 1: "Понедельник", 2: "Вторник", 3: "Среда", 4: "Четверг", 5: "Пятница", 6: "Суббота", 0: "Воскресенье" };
+        let thursdayMode = localStorage.getItem('schedule_7g_thu_mode_107') || 'start1310';
+
+        const SCHEDULE_DATA = {
+            1: [
+                { num: 6,  subject: "Физика", teacher: "Сабурова Н.С.", room: "319", icon: "ph-atom" },
+                { num: 7,  subject: "Разговоры о важном", teacher: "Павлова И.А.", room: "307", icon: "ph-chats-circle" },
+                { num: 8,  subject: "Английский язык", teacher: "Гамалей А.К. / Машукова О.А.", room: "312 / 213", icon: "ph-translate" },
+                { num: 9,  subject: "Технология", teacher: "Игнатова Е.В. / Корниенко Г.Л.", room: "324 / 122М", icon: "ph-wrench" },
+                { num: 10, subject: "Технология", teacher: "Игнатова Е.В. / Корниенко Г.Л.", room: "324 / 122М", icon: "ph-wrench" },
+                { num: 11, subject: "География", teacher: "Калюжная Е.А.", room: "310", icon: "ph-globe-hemisphere-east" },
+                { num: 12, empty: true }
+            ],
+            2: [
+                { num: 6,  empty: true },
+                { num: 7,  subject: "История", teacher: "Бабенко П.В.", room: "218", icon: "ph-scroll" },
+                { num: 8,  subject: "Математический практикум", teacher: "Жилина Т.А.", room: "205", icon: "ph-function" },
+                { num: 9,  subject: "Вероятность и статистика", teacher: "Жилина Т.А.", room: "205", icon: "ph-chart-bar" },
+                { num: 10, subject: "Английский язык", teacher: "Гамалей А.К. / Машукова О.А.", room: "312 / 308А", icon: "ph-translate" },
+                { num: 11, subject: "География", teacher: "Калюжная Е.А.", room: "310", icon: "ph-globe-hemisphere-east" },
+                { num: 12, subject: "Биология", teacher: "Доля Н.В.", room: "219", icon: "ph-plant" }
+            ],
+            3: [
+                { num: 6,  subject: "Физическая культура", teacher: "Бондаренко-Добряк С.А.", room: "Зал 2", icon: "ph-basketball" },
+                { num: 7,  subject: "Физика", teacher: "Сабурова Н.С.", room: "220", icon: "ph-atom" },
+                { num: 8,  subject: "История", teacher: "Бабенко П.В.", room: "215", icon: "ph-scroll" },
+                { num: 9,  subject: "Геометрия", teacher: "Жилина Т.А.", room: "205", icon: "ph-shapes" },
+                { num: 10, subject: "Алгебра", teacher: "Жилина Т.А.", room: "205", icon: "ph-calculator" },
+                { num: 11, subject: "Русский язык", teacher: "Павлова И.А.", room: "307", icon: "ph-book-bookmark" },
+                { num: 12, subject: "Литература", teacher: "Павлова И.А.", room: "307", icon: "ph-books" }
+            ],
+            4: [
+                { num: 6,  subject: "Практикум по русскому языку", teacher: "Павлова И.А.", room: "307", icon: "ph-pen-nib", optionalOnThu: true },
+                { num: 7,  subject: "Английский язык", teacher: "Гамалей А.К. / Машукова О.А.", room: "212 / 308А", icon: "ph-translate" },
+                { num: 8,  subject: "Литература", teacher: "Павлова И.А.", room: "307", icon: "ph-books" },
+                { num: 9,  subject: "Геометрия", teacher: "Жилина Т.А.", room: "205", icon: "ph-shapes" },
+                { num: 10, subject: "Алгебра", teacher: "Жилина Т.А.", room: "205", icon: "ph-calculator" },
+                { num: 11, subject: "История", teacher: "Бабенко П.В.", room: "215", icon: "ph-scroll" },
+                { num: 12, subject: "Музыка", teacher: "Седых Н.П.", room: "111А", icon: "ph-music-notes" }
+            ],
+            5: [
+                { num: 6,  subject: "Физическая культура", teacher: "Бондаренко-Добряк С.А.", room: "Зал 1", icon: "ph-basketball" },
+                { num: 7,  subject: "Информатика", teacher: "Гусаков С.Р. / Бочкова Л.С.", room: "213 / 212", icon: "ph-desktop" },
+                { num: 8,  subject: "Русский язык", teacher: "Павлова И.А.", room: "307", icon: "ph-book-bookmark" },
+                { num: 9,  subject: "Алгебра", teacher: "Жилина Т.А.", room: "205", icon: "ph-calculator" },
+                { num: 10, subject: "Русский язык", teacher: "Павлова И.А.", room: "307", icon: "ph-book-bookmark" },
+                { num: 11, subject: "ИЗО", teacher: "Черная О.А.", room: "220", icon: "ph-palette" },
+                { num: 12, subject: "Русский язык", teacher: "Павлова И.А.", room: "307", icon: "ph-book-bookmark" }
+            ]
+        };
+
+        function getDayLessons(dayNum) {
+            const raw = SCHEDULE_DATA[dayNum] || [];
+            return raw.map(item => {
+                if (dayNum === 4 && item.optionalOnThu) {
+                    return { ...item, isSkippedMain: thursdayMode === 'start1310' };
+                }
+                return { ...item, isSkippedMain: false };
+            });
+        }
+
+        function setThursdayMode(mode) {
+            thursdayMode = mode;
+            localStorage.setItem('schedule_7g_thu_mode_107', mode);
+            renderLessonsForSelectedDay(true);
+            updateLiveTimer();
+        }
+
+        let selectedDay = 1;
+        let isSimulated = false;
+        let simDay = 1;
+        let simMsOffset = 0;
+        let lastRealTimestamp = performance.now();
+
+        function timeToMs(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            return (h * 3600 + m * 60) * 1000;
+        }
+
+        function formatDurationMs(totalMs) {
+            if (totalMs < 0) totalMs = 0;
+            const h = Math.floor(totalMs / 3600000);
+            const m = Math.floor((totalMs % 3600000) / 60000);
+            const s = Math.floor((totalMs % 60000) / 1000);
+            const ms = Math.floor(totalMs % 1000);
+            const pad = (n, width = 2) => String(n).padStart(width, '0');
+
+            const tf = userConfig.timerFormat;
+            if (tf === 'secs_ms') {
+                const totalSecs = Math.floor(totalMs / 1000);
+                return `${totalSecs}.${pad(ms, 3)}с`;
+            }
+            if (tf === 'secs_only') {
+                const totalSecs = Math.floor(totalMs / 1000);
+                return `${totalSecs} сек`;
+            }
+            if (tf === 'mins_only') {
+                const totalMins = Math.floor(totalMs / 60000);
+                return `${totalMins} мин`;
+            }
+            if (tf === 'hours_only') {
+                return `${h} ч`;
+            }
+            if (tf === 'compact') {
+                return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+            }
+            return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms, 3)}` : `${pad(m)}:${pad(s)}.${pad(ms, 3)}`;
+        }
+
+        function getNowState() {
+            const now = new Date();
+            if (!isSimulated) {
+                const totalMs = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) * 1000 + now.getMilliseconds();
+                const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+                return { dateObj: now, dayOfWeek: now.getDay(), currentMs: totalMs, timeString };
+            } else {
+                const currentMs = simMsOffset;
+                const totalSec = Math.floor(currentMs / 1000);
+                const h = Math.floor(totalSec / 3600) % 24;
+                const m = Math.floor((totalSec % 3600) / 60);
+                const s = Math.floor(totalSec % 60);
+                const ms = Math.floor(currentMs % 1000);
+                const pad = (n, width = 2) => String(n).padStart(width, '0');
+                return { dateObj: now, dayOfWeek: simDay, currentMs, timeString: `${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms, 3)}` };
+            }
+        }
+
+        function selectDay(dayNum) {
+            const prevDay = selectedDay;
+            selectedDay = dayNum;
+            updateDayTabsUI();
+            renderLessonsForSelectedDay(true, dayNum >= prevDay ? 'next' : 'prev');
+        }
+
+        function updateDayTabsUI() {
+            const { dayOfWeek } = getNowState();
+            for (let d = 1; d <= 5; d++) {
+                const btn = document.getElementById(`tab-${d}`);
+                const dot = document.getElementById(`today-dot-${d}`);
+                if (d === dayOfWeek) dot.classList.remove('hidden'); else dot.classList.add('hidden');
+                if (d === selectedDay) {
+                    btn.className = "day-tab custom-btn relative flex flex-col items-center justify-center min-h-[54px] py-2.5 px-1.5 font-bold text-sm border accent-bg border-transparent shadow-xl scale-[1.03]";
+                    if (d === dayOfWeek) dot.className = "mt-0.5 text-[9px] leading-tight font-extrabold px-2 py-0.5 rounded-full bg-white/25 text-white";
+                } else {
+                    btn.className = "day-tab custom-btn relative flex flex-col items-center justify-center min-h-[54px] py-2.5 px-1.5 font-bold text-sm border theme-surface hover:opacity-90";
+                    if (d === dayOfWeek) dot.className = "mt-0.5 text-[9px] leading-tight font-extrabold px-2 py-0.5 rounded-full accent-soft-bg";
+                }
+            }
+            document.getElementById('selected-day-indicator').innerHTML = selectedDay === dayOfWeek ? `<span class="inline-flex items-center gap-1.5 font-extrabold"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Сегодня</span>` : `Просмотр: <b>${DAY_NAMES[selectedDay]}</b>`;
+        }
+
+        function renderLessonsForSelectedDay(animate = true, direction = 'next') {
+            const lessons = getDayLessons(selectedDay);
+            const activeLessons = lessons.filter(l => !l.empty && !l.isSkippedMain);
+            const firstLesson = activeLessons[0];
+            const lastLesson = activeLessons[activeLessons.length - 1];
+
+            const headerCard = document.getElementById('day-header-card');
+            if (animate && !userConfig.lowPerf) {
+                headerCard.classList.remove('day-switch-next', 'day-switch-prev');
+                void headerCard.offsetWidth;
+                headerCard.classList.add(direction === 'next' ? 'day-switch-next' : 'day-switch-prev');
+            }
+
+            const thuBox = document.getElementById('thursday-options');
+            if (selectedDay === 4) {
+                thuBox.classList.remove('hidden');
+                document.getElementById('thu-mode-1310').className = `custom-btn px-3 py-1.5 font-bold text-xs ${thursdayMode === 'start1310' ? 'accent-bg shadow-sm' : 'theme-text-muted'}`;
+                document.getElementById('thu-mode-prac').className = `custom-btn px-3 py-1.5 font-bold text-xs ${thursdayMode === 'withPracticum' ? 'accent-bg shadow-sm' : 'theme-text-muted'}`;
+            } else {
+                thuBox.classList.add('hidden');
+            }
+
+            document.getElementById('day-title').innerText = DAY_NAMES[selectedDay];
+            document.getElementById('day-Meta').innerText = selectedDay === 4 && thursdayMode === 'start1310' ? "В четверг начало уроков в 13:10" : "Обычное начало уроков в 12:20";
+            document.getElementById('day-hours-badge').innerHTML = `<i class="ph-bold ph-clock accent-text"></i> ${BELL_SCHEDULE[firstLesson.num].start} – ${BELL_SCHEDULE[lastLesson.num].end}`;
+            document.getElementById('day-count-badge').innerText = `${activeLessons.length} уроков`;
+
+            const { dayOfWeek, currentMs } = getNowState();
+            const isTodaySelected = (selectedDay === dayOfWeek);
+            const container = document.getElementById('lessons-list');
+            container.innerHTML = '';
+
+            lessons.forEach((item, index) => {
+                const bell = BELL_SCHEDULE[item.num];
+                const startMs = timeToMs(bell.start);
+                const endMs = timeToMs(bell.end);
+                const isCurrentLesson = isTodaySelected && !item.empty && !item.isSkippedMain && currentMs >= startMs && currentMs < endMs;
+                const isPastLesson = isTodaySelected && currentMs >= endMs;
+                const delayStyle = (animate && !userConfig.lowPerf) ? `animation-delay: ${index * 40}ms;` : '';
+
+                if (item.empty) {
+                    container.innerHTML += `<div style="${delayStyle}" class="theme-surface-alt border border-dashed px-4 py-3 flex items-center justify-between theme-text-muted text-xs opacity-75 ${animate && !userConfig.lowPerf ? 'lesson-animate' : ''}"><div class="flex items-center gap-3"><span class="font-bold px-2.5 py-1 custom-badge theme-surface border text-xs">${item.num} урок</span><span class="font-mono-num">${bell.start} – ${bell.end}</span></div><span class="italic">Свободно</span></div>`;
+                    return;
+                }
+
+                if (item.isSkippedMain) {
+                    container.innerHTML += `<div style="${delayStyle}" class="theme-surface-alt border border-dashed px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 theme-text-muted text-xs ${animate && !userConfig.lowPerf ? 'lesson-animate' : ''}"><div class="flex items-center gap-3"><span class="font-bold px-2.5 py-1 custom-badge theme-surface border">${item.num} урок (${bell.start}–${bell.end})</span><span>${item.subject}</span></div><button onclick="setThursdayMode('withPracticum')" class="text-xs font-extrabold accent-soft-bg border border-current/20 px-3 py-1 custom-btn">Включить с 12:20</button></div>`;
+                    return;
+                }
+
+                let cardClasses = `theme-surface lesson-card-hover p-4 sm:p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${animate && !userConfig.lowPerf ? 'lesson-animate' : ''} `;
+                if (isCurrentLesson) { cardClasses += "active-lesson-card"; }
+                else if (isPastLesson) cardClasses += "opacity-60"; else cardClasses += "shadow-lg";
+
+                let statusPill = isCurrentLesson ? `<span class="inline-flex items-center gap-1.5 accent-bg text-[11px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wide shadow-md"><span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> Идёт сейчас</span>` : (isPastLesson ? `<span class="inline-flex items-center gap-1 theme-text-muted text-xs font-semibold"><i class="ph-bold ph-check"></i> Прошёл</span>` : '');
+
+                const cardHtml = `
+                    <div style="${delayStyle}" class="${cardClasses}">
+                        <div class="flex items-start sm:items-center gap-3.5">
+                            <div class="flex flex-col items-center justify-center min-w-[86px] py-2.5 px-3 custom-box ${isCurrentLesson ? 'accent-bg shadow-md' : 'accent-soft-bg border border-current/20'} text-center shrink-0">
+                                <span class="text-xs font-extrabold uppercase tracking-wider">${item.num} урок</span>
+                                <span class="text-[11px] font-mono-num opacity-95 font-bold mt-0.5">${bell.start}–${bell.end}</span>
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="text-base sm:text-lg font-extrabold leading-snug flex items-center gap-1.5">
+                                        <i class="ph-duotone ${item.icon || 'ph-book'} accent-text text-lg"></i>
+                                        <span>${item.subject}</span>
+                                    </h3>
+                                    ${statusPill}
+                                </div>
+                                <div class="flex items-center gap-x-4 text-xs sm:text-sm theme-text-muted mt-1">
+                                    <span class="inline-flex items-center gap-1.5 font-semibold"><i class="ph-duotone ph-chalkboard-teacher accent-text text-base"></i>${item.teacher}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-500/20">
+                            <div class="inline-flex items-center gap-1.5 theme-surface-alt border font-extrabold text-xs sm:text-sm px-3.5 py-2 custom-badge shadow-sm">
+                                <i class="ph-duotone ph-door-open accent-text text-base"></i>
+                                <span>${item.room.includes('Зал') ? item.room : 'каб. ' + item.room}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        function updateLiveTimer() {
+            if (isSimulated) {
+                const nowPerf = performance.now();
+                simMsOffset += (nowPerf - lastRealTimestamp);
+                lastRealTimestamp = nowPerf;
+            } else {
+                lastRealTimestamp = performance.now();
+            }
+
+            const { dateObj, dayOfWeek, currentMs, timeString } = getNowState();
+            document.getElementById('live-clock').innerText = timeString;
+            document.getElementById('live-date').innerText = `${DAY_NAMES[dayOfWeek]}, ${dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}`;
+
+            const canteenOpenMs = timeToMs("08:00");
+            const canteenCloseMs = timeToMs("16:25");
+            const canteenTimerEl = document.getElementById('canteen-timer');
+            const canteenLabelEl = document.getElementById('canteen-status-label');
+
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                canteenLabelEl.innerText = "Столовая (Выходной)";
+                canteenTimerEl.innerText = "ЗАКРЫТА";
+                canteenTimerEl.className = "text-sm sm:text-base font-mono-num font-extrabold text-red-400 tracking-wider mt-0.5";
+            } else if (currentMs < canteenOpenMs) {
+                const remOpen = canteenOpenMs - currentMs;
+                canteenLabelEl.innerText = "До открытия (08:00)";
+                canteenTimerEl.innerText = formatDurationMs(remOpen);
+                canteenTimerEl.className = "text-sm sm:text-base font-mono-num font-extrabold text-cyan-300 tracking-wider mt-0.5";
+            } else if (currentMs >= canteenOpenMs && currentMs <= canteenCloseMs) {
+                const remClose = canteenCloseMs - currentMs;
+                canteenLabelEl.innerText = "Открыта! До закрытия";
+                canteenTimerEl.innerText = formatDurationMs(remClose);
+                canteenTimerEl.className = "text-sm sm:text-base font-mono-num font-extrabold text-amber-300 tracking-wider mt-0.5";
+            } else {
+                canteenLabelEl.innerText = "Столовая";
+                canteenTimerEl.innerText = "ЗАКРЫТА НА СЕГОДНЯ";
+                canteenTimerEl.className = "text-sm sm:text-base font-mono-num font-extrabold text-red-400 tracking-wider mt-0.5";
+            }
+
+            const iconBox = document.getElementById('status-icon-box');
+            const badge = document.getElementById('status-badge');
+            const title = document.getElementById('status-title');
+            const subtitle = document.getElementById('status-subtitle');
+            const countdownBox = document.getElementById('countdown-box');
+            const progressContainer = document.getElementById('progress-container');
+
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                iconBox.innerText = "🎉"; badge.innerText = "Выходной день"; title.innerText = "Сегодня уроков нет! Отдыхайте"; subtitle.innerText = "Открыто расписание на понедельник";
+                countdownBox.classList.add('hidden'); progressContainer.classList.add('hidden');
+                return;
+            }
+
+            const todayLessons = getDayLessons(dayOfWeek).filter(l => !l.empty && !l.isSkippedMain);
+            if (todayLessons.length === 0) return;
+
+            const firstLesson = todayLessons[0];
+            const lastLesson = todayLessons[todayLessons.length - 1];
+            const dayStartMs = timeToMs(BELL_SCHEDULE[firstLesson.num].start);
+            const dayEndMs = timeToMs(BELL_SCHEDULE[lastLesson.num].end);
+
+            if (currentMs < dayStartMs) {
+                iconBox.innerText = "🎒"; badge.innerText = `Подготовка • ${DAY_NAMES[dayOfWeek]}`; title.innerText = `Первый урок в ${BELL_SCHEDULE[firstLesson.num].start}: ${firstLesson.subject}`; subtitle.innerText = `Кабинет: ${firstLesson.room}`;
+                countdownBox.classList.remove('hidden'); document.getElementById('countdown-label').innerText = "До урока"; document.getElementById('countdown-timer').innerText = formatDurationMs(dayStartMs - currentMs);
+                progressContainer.classList.add('hidden');
+            } else if (currentMs >= dayEndMs) {
+                iconBox.innerText = "🏠"; badge.innerText = "День завершён"; title.innerText = "Уроки закончились! Отдыхайте 🎉"; subtitle.innerText = "Хорошего вечера!";
+                countdownBox.classList.add('hidden'); progressContainer.classList.add('hidden');
+            } else {
+                let foundActive = null, foundBreak = null;
+                for (let i = 0; i < todayLessons.length; i++) {
+                    const les = todayLessons[i];
+                    const bell = BELL_SCHEDULE[les.num];
+                    const sMs = timeToMs(bell.start), eMs = timeToMs(bell.end);
+                    if (currentMs >= sMs && currentMs < eMs) { foundActive = { ...les, startMs: sMs, endMs: eMs, startStr: bell.start, endStr: bell.end }; break; }
+                    if (i > 0) {
+                        const pBell = BELL_SCHEDULE[todayLessons[i-1].num];
+                        const pEnd = timeToMs(pBell.end);
+                        if (currentMs >= pEnd && currentMs < sMs) { foundBreak = { ...les, startMs: sMs, startStr: bell.start, prevEnd: pBell.end }; break; }
+                    }
+                }
+
+                if (foundActive) {
+                    const rem = foundActive.endMs - currentMs;
+                    const dur = foundActive.endMs - foundActive.startMs;
+                    const pct = Math.min(100, Math.max(0, ((currentMs - foundActive.startMs) / dur) * 100)).toFixed(2);
+                    iconBox.innerText = "📚"; badge.innerText = `Идёт ${foundActive.num} урок`; title.innerText = foundActive.subject; subtitle.innerText = `Каб. ${foundActive.room} • ${foundActive.teacher}`;
+                    countdownBox.classList.remove('hidden'); document.getElementById('countdown-label').innerText = "До конца урока"; document.getElementById('countdown-timer').innerText = formatDurationMs(rem);
+                    progressContainer.classList.remove('hidden');
+                    document.getElementById('progress-start-text').innerText = foundActive.startStr; document.getElementById('progress-percent-text').innerText = `${pct}%`; document.getElementById('progress-end-text').innerText = foundActive.endStr;
+                    document.getElementById('progress-bar').style.width = `${pct}%`;
+                } else if (foundBreak) {
+                    const rem = foundBreak.startMs - currentMs;
+                    iconBox.innerText = "☕"; badge.innerText = "Перемена"; title.innerText = `Далее: ${foundBreak.subject} (${foundBreak.num} урок)`; subtitle.innerText = `В каб. ${foundBreak.room}`;
+                    countdownBox.classList.remove('hidden'); document.getElementById('countdown-label').innerText = "До начала"; document.getElementById('countdown-timer').innerText = formatDurationMs(rem);
+                    progressContainer.classList.add('hidden');
+                }
+            }
+        }
+
+        window.addEventListener('scroll', () => {
+            const fab = document.getElementById('floating-actions');
+            if (window.scrollY > 220) fab.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            else fab.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+        }, { passive: true });
+
+        function scrollToActiveOrTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        function initAutoDay() {
+            const realDay = new Date().getDay();
+            if (realDay >= 1 && realDay <= 5) { document.getElementById('weekend-notice').classList.add('hidden'); selectDay(realDay); }
+            else { document.getElementById('weekend-notice').classList.remove('hidden'); selectDay(1); }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            applyCustomizations();
+            initAutoDay();
+            updateLiveTimer();
+            setInterval(updateLiveTimer, 31);
+        });
+    </script>
+</body>
+</html>
