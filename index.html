@@ -270,11 +270,11 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <!-- КНОПКА КВЕН ИИ -->
-                    <a href="https://t.me/botbot228228228_bot" target="_blank" class="custom-btn inline-flex items-center gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
+                    <!-- КНОПКА ОТКРЫТИЯ ВСТРОЕННОГО ЧАТА С ИИ -->
+                    <button onclick="openAiChatModal()" class="custom-btn inline-flex items-center gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
                         <i class="ph-fill ph-robot text-sm sm:text-base text-cyan-200"></i>
                         <span>КВЕН ИИ</span>
-                    </a>
+                    </button>
                     <button onclick="openGameModal()" class="custom-btn inline-flex items-center gap-1 bg-indigo-600/80 hover:bg-indigo-600 backdrop-blur-md px-3 py-1.5 text-xs sm:text-sm font-bold text-white border border-white/30 shadow-md">
                         <i class="ph-fill ph-squares-four text-sm sm:text-base text-cyan-200"></i>
                         <span>ТЕТРИС</span>
@@ -458,6 +458,44 @@
         </div>
 
     </main>
+
+    <!-- МОДАЛЬНОЕ ОКНО ВСТРОЕННОГО ЧАТА С КВЕН ИИ -->
+    <div id="ai-chat-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 modal-backdrop transition-opacity">
+        <div class="theme-surface border w-full max-w-lg p-5 sm:p-6 shadow-2xl flex flex-col rounded-3xl animate-[lessonSlideIn_0.25s_ease-out] h-[85vh] sm:h-[80vh]">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-500/20 mb-3 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 custom-badge bg-violet-600/20 text-violet-400 border border-violet-500/30 flex items-center justify-center text-xl">
+                        🤖
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold">КВЕН ИИ — Помощник</h3>
+                        <p class="text-xs theme-text-muted">Задавайте вопросы по учебе прямо здесь</p>
+                    </div>
+                </div>
+                <button onclick="closeAiChatModal()" class="custom-btn theme-surface-alt border w-9 h-9 flex items-center justify-center text-lg">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Область сообщений чата с ИИ -->
+            <div id="ai-messages-container" class="flex-grow overflow-y-auto space-y-3 p-3 theme-surface-alt border custom-box mb-3">
+                <div class="flex flex-col items-start">
+                    <div class="text-[10px] font-bold theme-text-muted mb-0.5 px-1">Квен ИИ</div>
+                    <div class="max-w-[85%] px-3.5 py-2 rounded-2xl text-xs sm:text-sm theme-surface border break-words">
+                        Привет! Я твой локальный ИИ-помощник. Спроси меня что-нибудь по домашкам или расписанию! ✨
+                    </div>
+                </div>
+            </div>
+
+            <!-- Поле ввода сообщения -->
+            <div class="flex gap-2 shrink-0">
+                <input type="text" id="ai-chat-input" onkeydown="if(event.key==='Enter') sendAiMessage()" placeholder="Спросить Квена..." class="flex-grow custom-badge border theme-surface-alt px-4 py-3 text-sm focus:outline-none">
+                <button onclick="sendAiMessage()" class="custom-btn accent-bg px-5 py-3 text-sm font-extrabold shadow-md shrink-0">
+                    <i class="ph-bold ph-paper-plane-tilt text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- МОДАЛЬНОЕ ОКНО ИГРЫ ТЕТРИС -->
     <div id="game-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 modal-backdrop transition-opacity">
@@ -676,9 +714,9 @@
 
     <!-- ПЛАВАЮЩАЯ КНОПКА -->
     <div id="floating-actions" class="fixed bottom-5 right-4 z-40 flex flex-col gap-2.5 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
-        <a href="https://t.me/botbot228228228_bot" target="_blank" title="Квен ИИ" class="custom-btn bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
+        <button onclick="openAiChatModal()" title="Квен ИИ" class="custom-btn bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
             🤖
-        </a>
+        </button>
         <button onclick="openGameModal()" title="Тетрис" class="custom-btn bg-indigo-600 hover:bg-indigo-500 text-white w-12 h-12 shadow-lg flex items-center justify-center text-xl border border-white/20">
             🎮
         </button>
@@ -698,6 +736,87 @@
     </footer>
 
     <script>
+        /* --- ЛОГИКА ВСТРОЕННОГО ЧАТА С КВЕН ИИ --- */
+        function openAiChatModal() {
+            document.getElementById('ai-chat-modal').classList.remove('hidden');
+        }
+
+        function closeAiChatModal() {
+            document.getElementById('ai-chat-modal').classList.add('hidden');
+        }
+        document.getElementById('ai-chat-modal').addEventListener('click', (e) => { if (e.target.id === 'ai-chat-modal') closeAiChatModal(); });
+
+        async function sendAiMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const container = document.getElementById('ai-messages-container');
+
+            // Добавляем сообщение пользователя в чат
+            container.innerHTML += `
+                <div class="flex flex-col items-end">
+                    <div class="text-[10px] font-bold theme-text-muted mb-0.5 px-1">Вы</div>
+                    <div class="max-w-[85%] px-3.5 py-2 rounded-2xl text-xs sm:text-sm accent-bg shadow-sm break-words">
+                        ${escapeHtml(text)}
+                    </div>
+                </div>
+            `;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            // Блок сообщения "Думает..."
+            const loadingId = 'loading-' + Date.now();
+            container.innerHTML += `
+                <div id="${loadingId}" class="flex flex-col items-start">
+                    <div class="text-[10px] font-bold theme-text-muted mb-0.5 px-1">Квен ИИ</div>
+                    <div class="max-w-[85%] px-3.5 py-2 rounded-2xl text-xs sm:text-sm theme-surface border animate-pulse">
+                        🧠 Думаю над ответом...
+                    </div>
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                // Отправляем запрос на твой локальный python-сервер
+                const res = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                if (!res.ok) throw new Error('Сервер недоступен');
+                const data = await res.json();
+
+                // Удаляем индикатор загрузки и пишем ответ нейросети
+                document.getElementById(loadingId).remove();
+                container.innerHTML += `
+                    <div class="flex flex-col items-start">
+                        <div class="text-[10px] font-bold theme-text-muted mb-0.5 px-1">Квен ИИ</div>
+                        <div class="max-w-[85%] px-3.5 py-2 rounded-2xl text-xs sm:text-sm theme-surface border break-words">
+                            ${escapeHtml(data.response)}
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                container.innerHTML += `
+                    <div class="flex flex-col items-start">
+                        <div class="text-[10px] font-bold theme-text-muted mb-0.5 px-1">Квен ИИ</div>
+                        <div class="max-w-[85%] px-3.5 py-2 rounded-2xl text-xs sm:text-sm bg-red-500/20 text-red-300 border border-red-500/30 break-words">
+                            ⚠️ Ошибка связи с сервером! Убедись, что запущен `server.py` на твоем ноутбуке.
+                        </div>
+                    </div>
+                `;
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
         const ACCENT_PALETTES = {
             indigo:  { accent: '#4f46e5', light: '#6366f1', dark: '#3730a3', soft: 'rgba(79, 70, 229, 0.18)', glow: 'rgba(79, 70, 229, 0.4)', gradFrom: 'rgba(79, 70, 229, 0.85)', gradVia: 'rgba(67, 56, 202, 0.85)', gradTo: 'rgba(109, 40, 217, 0.85)' },
             emerald: { accent: '#059669', light: '#10b981', dark: '#065f46', soft: 'rgba(16, 185, 129, 0.18)', glow: 'rgba(16, 185, 129, 0.4)', gradFrom: 'rgba(5, 150, 105, 0.85)', gradVia: 'rgba(4, 120, 87, 0.85)', gradTo: 'rgba(15, 118, 110, 0.85)' },
